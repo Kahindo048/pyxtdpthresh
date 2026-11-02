@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "pyxtdpthresh: dynamic panel threshold models in Python"
+type: software
+version: 0.0.1
+license: MIT
+authors:
+  - family-names: Kahindo
+    given-names: Frederick
+repository-code: "https://github.com/Kahindo048/pyxtdpthresh"
+keywords:
+  - econometrics
+  - panel data
+  - threshold regression
+  - dynamic panel
+references:
+  - type: article
+    title: "Dynamic panels with threshold effect and endogeneity"
+    authors:
+      - family-names: Seo
+        given-names: Myung Hwan
+      - family-names: Shin
+        given-names: Yongcheol
+    journal: "Journal of Econometrics"
+    volume: 195
+    start: 169
+    end: 186
+    year: 2016
