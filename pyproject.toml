@@ -124,7 +124,7 @@ strict_equality = true
 
 # biblioth??ques sans stubs complets
 [[tool.mypy.overrides]]
-module = ["numba.*", "scipy.*", "docx.*", "openpyxl.*", "joblib.*", "threadpoolctl.*"]
+module = ["numba.*", "scipy.*", "pandas.*", "docx.*", "openpyxl.*", "joblib.*", "threadpoolctl.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------- pytest
@@ -186,6 +186,8 @@ source_modules = [
     "pyxtdpthresh.results",
 ]
 forbidden_modules = ["numba"]
+# only a direct import is forbidden: the layers above use kernels, which use Numba
+allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
 name = "Matplotlib, Word et Excel seulement dans extras"

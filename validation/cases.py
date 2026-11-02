@@ -135,6 +135,7 @@ void pyx_export(string scalar fname, real matrix M)
 {
     real scalar fh, i, j
     string scalar line
+    if (fileexists(fname)) unlink(fname)
     fh = fopen(fname, "w")
     for (i = 1; i <= rows(M); i++) {
         line = strofreal(M[i,1], "%21.15g")

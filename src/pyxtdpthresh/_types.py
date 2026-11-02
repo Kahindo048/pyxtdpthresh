@@ -10,6 +10,7 @@ import numpy.typing as npt
 FloatArray = npt.NDArray[np.float64]
 IntArray = npt.NDArray[np.int64]
 BoolArray = npt.NDArray[np.bool_]
+UIntArray = npt.NDArray[np.uint64]
 
 #: Transformation that removes the unit effect.
 Method = Literal["fd", "fod"]
