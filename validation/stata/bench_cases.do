@@ -30,6 +30,7 @@ forvalues r = 1/5 {
     quietly timer list 1
     local sec = r(t1)
     matrix pyxbench = (pyxbench \ (1, `r', `sec'))
+    mata: pyx_export("../out/bench_stata.csv", st_matrix("pyxbench")[2..rows(st_matrix("pyxbench")), .])
 }
 forvalues r = 1/3 {
     use "../data/invest.dta", clear
@@ -38,11 +39,12 @@ forvalues r = 1/3 {
     set seed 2024
     timer clear 1
     timer on 1
-    quietly xthenreg invest debt, endogenous(cashflow tobin_q debt) grid_num(100) trim_rate(0.4) boost(399)
+    quietly xthenreg invest debt, endogenous(cashflow tobin_q debt) grid_num(100) trim_rate(0.4) boost(20)
     timer off 1
     quietly timer list 1
     local sec = r(t1)
     matrix pyxbench = (pyxbench \ (2, `r', `sec'))
+    mata: pyx_export("../out/bench_stata.csv", st_matrix("pyxbench")[2..rows(st_matrix("pyxbench")), .])
 }
 forvalues r = 1/5 {
     use "../data/invest.dta", clear
@@ -56,6 +58,7 @@ forvalues r = 1/5 {
     quietly timer list 1
     local sec = r(t1)
     matrix pyxbench = (pyxbench \ (3, `r', `sec'))
+    mata: pyx_export("../out/bench_stata.csv", st_matrix("pyxbench")[2..rows(st_matrix("pyxbench")), .])
 }
 forvalues r = 1/3 {
     use "../data/invest.dta", clear
@@ -64,11 +67,11 @@ forvalues r = 1/3 {
     set seed 2024
     timer clear 1
     timer on 1
-    quietly xthenreg invest debt, endogenous(cashflow tobin_q debt) grid_num(100) trim_rate(0.4) boost(399)
+    quietly xthenreg invest debt, endogenous(cashflow tobin_q debt) grid_num(100) trim_rate(0.4) boost(20)
     timer off 1
     quietly timer list 1
     local sec = r(t1)
     matrix pyxbench = (pyxbench \ (4, `r', `sec'))
+    mata: pyx_export("../out/bench_stata.csv", st_matrix("pyxbench")[2..rows(st_matrix("pyxbench")), .])
 }
-mata: pyx_export("../out/bench_stata.csv", st_matrix("pyxbench")[2..rows(st_matrix("pyxbench")), .])
 exit, clear

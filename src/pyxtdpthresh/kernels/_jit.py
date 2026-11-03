@@ -9,10 +9,12 @@ instead of raising.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from typing import Any
 
 import numba
+from threadpoolctl import ThreadpoolController
 
 from pyxtdpthresh._config import get_options, set_options
 
@@ -44,3 +46,23 @@ def set_threads(n: int | None) -> int:
     """
     set_options(threads=n)
     return apply_threads()
+
+
+_controller: ThreadpoolController | None = None
+
+
+@contextmanager
+def blas_threads() -> Iterator[int]:
+    """Limit the BLAS threads to half of the Numba threads while a computation runs.
+
+    The Numba kernels and the BLAS products of NumPy both run on every core; used one after the
+    other they fight for the cores (the OpenMP workers of the kernels keep spinning), and a small
+    matrix product can become 20 times slower than on its own.  Half of the threads for the
+    products keeps both fast.  The limit is lifted when the block ends.
+    """
+    global _controller
+    if _controller is None:  # scanning the loaded libraries is slow: done once
+        _controller = ThreadpoolController()
+    limit = max(1, apply_threads() // 2)
+    with _controller.limit(limits=limit, user_api="blas"):
+        yield limit

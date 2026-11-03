@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import NamedTuple
 
 import numpy as np
 
 from pyxtdpthresh._types import FloatArray
 from pyxtdpthresh.core.gmm import moment_covariance
-from pyxtdpthresh.core.linalg import invsym
+from pyxtdpthresh.core.linalg import invsym, syminv
 
 
 def ma1_weight(blocks: Sequence[FloatArray]) -> FloatArray:
@@ -51,3 +52,39 @@ def second_step_weight(g: FloatArray) -> FloatArray:
     """
     # Stata: GMM_W_n_2_con (xthenreg.ado:1293)
     return invsym(moment_covariance(g, center=True))
+
+
+class FirstStepWeight(NamedTuple):
+    """First-step weight of the stacked first-difference system.
+
+    Attributes
+    ----------
+    weight
+        ``(L, L)`` matrix.
+    fallback
+        0: the MA(1) weight; 1: ``(Z'Z)^{-1}`` was substituted; 2: the identity was substituted
+        (``e(W1_fallback)``).
+    """
+
+    weight: FloatArray
+    fallback: int
+
+
+def stacked_ma1_weight(second_moment: FloatArray, lag_cross: FloatArray) -> FirstStepWeight:
+    """MA(1) first-step weight with the fallbacks ``(Z'Z)^{-1}`` then the identity.
+
+    Parameters
+    ----------
+    second_moment
+        ``W2 = Z'Z / n_u`` where ``n_u`` is the number of units.
+    lag_cross
+        ``W1 = (1/n_u) sum z_{t-1}' z_t`` over consecutive equations of the same unit.
+    """
+    # Stata: xdpt2_build_W_ma1 (xtdpthresh.ado:3808)
+    ma1 = syminv(2.0 * second_moment - lag_cross - lag_cross.T)
+    if ma1.ok:
+        return FirstStepWeight(ma1.inv, 0)
+    plain = syminv(second_moment)
+    if plain.ok:
+        return FirstStepWeight(plain.inv, 1)
+    return FirstStepWeight(np.eye(second_moment.shape[0]), 2)

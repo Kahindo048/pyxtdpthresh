@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from pyxtdpthresh.kernels import moments, rng, units
+from pyxtdpthresh.kernels import cleaning, moments, rng, sweep, transforms, units
 
 
 def warmup() -> None:
@@ -22,3 +22,6 @@ def warmup() -> None:
     moments.regime_moments(z, ptr, lev, weights, level, q, np.array([0.5]))
     units.unit_moments(z, np.ones(2), np.array([0, 2], dtype=np.int64))
     rng.next_uint64(rng.seed_state(1), 2)
+    sweep.sweep(np.eye(2), np.full(2, 1e-9))
+    cleaning.independent_columns(np.eye(2), 1e-13)
+    transforms.fod_triplets(np.array([0, 3], dtype=np.int64), np.ones(3, dtype=bool))

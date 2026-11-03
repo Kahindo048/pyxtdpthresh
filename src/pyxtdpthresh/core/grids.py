@@ -108,13 +108,17 @@ def threshold_grid(
     q = np.asarray(q_support, dtype=np.float64)
     q = q[~np.isnan(q)]
     if min_regime > 0 and 2 * min_regime > q.size:
-        raise SpecificationError(message("minregime_no_split", floor=min_regime, n=q.size))
+        raise SpecificationError(
+            message("minregime_no_split", floor=min_regime, n=q.size),
+            stata_code=498,
+            key="minregime_no_split",
+        )
     if q.size < MIN_SUPPORT:
-        raise DataError(message("q_too_few"), stata_code=498)
+        raise DataError(message("q_too_few"), stata_code=498, key="q_too_few")
     q_lo = float(quantile_type7(q, trim_rate / 2.0))
     q_hi = float(quantile_type7(q, 1.0 - trim_rate / 2.0))
     if q_lo >= q_hi:
-        raise DataError(message("q_no_variation"), stata_code=498)
+        raise DataError(message("q_no_variation"), stata_code=498, key="q_no_variation")
     default, applied = min_regime_floor(q, q_lo, q_hi, min_regime)
     if grid_type == "quantile":
         grid = quantile_grid(q, trim_rate / 2.0, 1.0 - trim_rate / 2.0, grid_num)

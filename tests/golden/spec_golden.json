@@ -1,0 +1,541 @@
+{
+ "meta": {
+  "stata": "Stata 17.0 MP",
+  "xtdpthresh": "0.9.38",
+  "source": "validation/spec_cases.py"
+ },
+ "cases": {
+  "ok_default": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 377.346  (df=111)  p = 0.0000 AR(1): z = -6.709  p = "
+  },
+  "ok_fod": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FOD (Arellano-Bover 1995)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =   .602435 Specification tests: Hansen J = 404.403  (df=111)  p = 0.0000 AR(1): z = -6.271  p "
+  },
+  "ok_maxlag_pair": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 335.165  (df=90)  p = 0.0000 AR(1): z = -7.212  p = 0"
+  },
+  "ok_maxlag_one": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 184.972  (df=45)  p = 0.0000 AR(1): z = -6.765  p = 0"
+  },
+  "ok_vce_case": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 377.346  (df=111)  p = 0.0000 AR(1): z = -6.828  p = "
+  },
+  "ok_level": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 377.346  (df=111)  p = 0.0000 AR(1): z = -6.709  p = "
+  },
+  "ok_bad_seed_without_bootstrap": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 377.346  (df=111)  p = 0.0000 AR(1): z = -6.709  p = "
+  },
+  "ok_unit_without_bootstrap": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FOD (Arellano-Bover 1995)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =   .602435 Specification tests: Hansen J = 404.403  (df=111)  p = 0.0000 AR(1): z = -6.271  p "
+  },
+  "ok_bad_nboot_without_bootstrap": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 377.346  (df=111)  p = 0.0000 AR(1): z = -6.709  p = "
+  },
+  "ok_bad_gridci_without_bootstrap": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 377.346  (df=111)  p = 0.0000 AR(1): z = -6.709  p = "
+  },
+  "ok_coef_boot_onestep": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 377.346  (df=111)  p = 0.0000 AR(1): z = -6.709  p = "
+  },
+  "vce": {
+   "rc": 198,
+   "text": "option vce() must be robust or windmeijer"
+  },
+  "coef_ci_type": {
+   "rc": 198,
+   "text": "option coefcitype() must be symmetric or percentile"
+  },
+  "coef_boot_gs": {
+   "rc": 198,
+   "text": "coefboot(gs) is not implemented: the available scheme is a threshold-search-aware cluster wild residual bootstrap, not the Gong-Seo coefficient bootstrap. Use coefboot(twostep|onestep|none)."
+  },
+  "coef_boot": {
+   "rc": 198,
+   "text": "option coefboot() must be twostep, onestep, or none"
+  },
+  "grid_type": {
+   "rc": 198,
+   "text": "option gridtype() must be uniform or quantile"
+  },
+  "min_regime": {
+   "rc": 198,
+   "text": "minregime() must be >= 0"
+  },
+  "bw_scale_zero": {
+   "rc": 198,
+   "text": "option bwscale() must be positive"
+  },
+  "bw_scale_negative": {
+   "rc": 198,
+   "text": "option bwscale() must be positive"
+  },
+  "refine_high": {
+   "rc": 198,
+   "text": "option refine() must be an integer between 0 and 20"
+  },
+  "refine_negative": {
+   "rc": 198,
+   "text": "option refine() must be an integer between 0 and 20"
+  },
+  "refine_kink": {
+   "rc": 198,
+   "text": "refine() is supported for the jump specification only (the kink regressor (q-gamma)*1(q>gamma) varies continuously in gamma)"
+  },
+  "search_mode": {
+   "rc": 198,
+   "text": "searchmode(), searchmax(), and searchtol() are no longer supported in xtdpthres The threshold search is a fixed finite grid selected by grid(#), with optional"
+  },
+  "search_max": {
+   "rc": 198,
+   "text": "searchmode(), searchmax(), and searchtol() are no longer supported in xtdpthres The threshold search is a fixed finite grid selected by grid(#), with optional"
+  },
+  "search_tol": {
+   "rc": 198,
+   "text": "searchmode(), searchmax(), and searchtol() are no longer supported in xtdpthres The threshold search is a fixed finite grid selected by grid(#), with optional"
+  },
+  "history": {
+   "rc": 198,
+   "text": "option history() must be panel or sample"
+  },
+  "history_sample_lag": {
+   "rc": 198,
+   "text": "history(sample) cannot retro-restrict time-series-operator terms (L.x, D.x, ...): they are materialized on the full panel before if/in applies. Pre-generate the lagged variables as plain variables, or use history(panel)."
+  },
+  "history_sample_ok": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 377.346  (df=111)  p = 0.0000 AR(1): z = -6.709  p = "
+  },
+  "boot_type_exact": {
+   "rc": 198,
+   "text": "boottype(exact) has been renamed boottype(unit): the unit-resampling scheme is Alg. 1-oriented but not certified as the exact algorithm"
+  },
+  "boot_type": {
+   "rc": 198,
+   "text": "option boottype() must be wild or unit"
+  },
+  "unit_fod": {
+   "rc": 198,
+   "text": "boottype(unit) currently supports method(fd) only (Gong-Seo Alg. 1 is developed for the first-differenced estimator)"
+  },
+  "unit_kink": {
+   "rc": 198,
+   "text": "boottype(unit) does not support kink (Alg. 1 targets the unrestricted jump estimator)"
+  },
+  "grid_sample": {
+   "rc": 198,
+   "text": "option gridsample() must be effective or observed"
+  },
+  "lev_maxlag": {
+   "rc": 198,
+   "text": "levmaxlag() was retired with method(system); use maxlag() for FD/FOD moments"
+  },
+  "iv_maxlag": {
+   "rc": 198,
+   "text": "iv() sub-option maxlag() is not supported (v0.7.0): user-supplied IVs always enter as their period-t value, so maxlag() never affected them \u2014 it only (silently) overrode the top-level maxlag() controlling GMM-style instruments. Use the top-level maxlag() option instead."
+  },
+  "method_system": {
+   "rc": 198,
+   "text": "method(system) is no longer supported as of xtdpthresh 0.9.25 The supported estimators are method(fd) and method(fod)."
+  },
+  "method": {
+   "rc": 198,
+   "text": "option method() must be fd or fod"
+  },
+  "grid_small": {
+   "rc": 198,
+   "text": "grid() must be at least 10"
+  },
+  "grid_ci_small": {
+   "rc": 198,
+   "text": "gridci() must be at least 10"
+  },
+  "gamma_test_noboot": {
+   "rc": 198,
+   "text": "citest() requires the grid bootstrap (remove noboot)"
+  },
+  "continuity_noboot": {
+   "rc": 198,
+   "text": "conttest requires the bootstrap tests (remove noboot and notest)"
+  },
+  "continuity_notest": {
+   "rc": 198,
+   "text": "conttest requires the bootstrap tests (remove noboot and notest)"
+  },
+  "trim_high": {
+   "rc": 198,
+   "text": "trim must be in [0.01, 0.45]"
+  },
+  "trim_low": {
+   "rc": 198,
+   "text": "trim must be in [0.01, 0.45]"
+  },
+  "n_boot_small": {
+   "rc": 198,
+   "text": "boot should be at least 10 (99+ recommended for production)"
+  },
+  "seed_fraction": {
+   "rc": 198,
+   "text": "rseed() must be an integer in [0, 2147483647]"
+  },
+  "seed_negative": {
+   "rc": 198,
+   "text": "rseed() must be an integer in [0, 2147483647]"
+  },
+  "seed_large": {
+   "rc": 198,
+   "text": "rseed() must be an integer in [0, 2147483647]"
+  },
+  "level_low": {
+   "rc": 198,
+   "text": "level() must be between 10 and 99.99 inclusive"
+  },
+  "level_high": {
+   "rc": 198,
+   "text": "level() must be between 10 and 99.99 inclusive"
+  },
+  "maxlag_zero": {
+   "rc": 125,
+   "text": "maxlag() invalid -- invalid numlist has elements outside of allowed range"
+  },
+  "maxlag_three": {
+   "rc": 123,
+   "text": "maxlag() invalid -- invalid numlist has too many elements"
+  },
+  "maxlag_fraction": {
+   "rc": 126,
+   "text": "maxlag() invalid -- invalid numlist has noninteger elements"
+  },
+  "maxlag_order": {
+   "rc": 198,
+   "text": "maxlag(# #) requires min <= max"
+  },
+  "grid_fraction": {
+   "rc": 198,
+   "text": "option grid() incorrectly specified"
+  },
+  "min_regime_fraction": {
+   "rc": 198,
+   "text": "option minregime() incorrectly specified"
+  },
+  "refine_fraction": {
+   "rc": 198,
+   "text": "option refine() incorrectly specified"
+  },
+  "trim_text": {
+   "rc": 198,
+   "text": "option trim() incorrectly specified"
+  },
+  "bw_scale_text": {
+   "rc": 198,
+   "text": "option bwscale() incorrectly specified"
+  },
+  "td_unit": {
+   "rc": 198,
+   "text": "boottype(unit) is not available with td: unit resampling changes the time-effects FWL projection in every draw, which is not replayed. Use boottype(wild), or remove td."
+  },
+  "td_twostep": {
+   "rc": 198,
+   "text": "coefboot(twostep) is not available with td: the two-step replay requires recomputing the time-effects FWL projection in every draw. Use coefboot(onestep) or coefboot(none)."
+  },
+  "td_twostep_noboot": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow (time-demeaned) Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .3346861 Specification tests: Hansen J = 144.172  (df=98)  p = 0.0017 AR(1): z"
+  },
+  "ok_range": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest L.cashflow L2.cashflow Grid search over 10 \u03b3 points in [0, .6044]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .4701216 Specification tests: Hansen J = 400.463  (df=118)  p = 0.0000 AR(1): z "
+  },
+  "ok_predetermined_lag2": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Predetermined: L2.invest Note: about 377 instrument columns; consider maxlag() or collapse. Grid search over 10 \u03b3 points in [0, .6044]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .5"
+  },
+  "ok_endogenous_lag2": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Endogenous:    L2.invest Note: about 364 instrument columns; consider maxlag() or collapse. Grid search over 10 \u03b3 points in [0, .6044]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .5"
+  },
+  "ok_iv_lag2": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Extra IVs:     L2.invest Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 377.346  (df=111)  p = 0.000"
+  },
+  "ok_dl": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest LD.cashflow F.tobin_q Grid search over 10 \u03b3 points in [0, .5896]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .5240804 Specification tests: Hansen J = 340.988  (df=102)  p = 0.0000 AR(1): z ="
+  },
+  "y_operator": {
+   "rc": 198,
+   "text": "dependent variable may not contain time-series operators; create the lag/differ"
+  },
+  "y_difference": {
+   "rc": 198,
+   "text": "dependent variable may not contain time-series operators; create the lag/differ"
+  },
+  "x_lag2_y": {
+   "rc": 198,
+   "text": "L2.invest is a lag of the dependent variable and cannot be strictly exogenous declare it in predetermined() instead of indepvars or exogenous()"
+  },
+  "x_lag3_y": {
+   "rc": 198,
+   "text": "L3.invest is a lag of the dependent variable and cannot be strictly exogenous declare it in predetermined() instead of indepvars or exogenous()"
+  },
+  "exogenous_lag2_y": {
+   "rc": 198,
+   "text": "L2.invest is a lag of the dependent variable and cannot be strictly exogenous declare it in predetermined() instead of indepvars or exogenous()"
+  },
+  "x_ld_y": {
+   "rc": 198,
+   "text": "LD.invest contains the current or a future value of the dependent variable differences, seasonal differences, and leads of invest cannot be regressors"
+  },
+  "x_lead_y": {
+   "rc": 198,
+   "text": "F.invest contains the current or a future value of the dependent variable differences, seasonal differences, and leads of invest cannot be regressors"
+  },
+  "x_seasonal_y": {
+   "rc": 198,
+   "text": "S12.invest contains the current or a future value of the dependent variable differences, seasonal differences, and leads of invest cannot be regressors"
+  },
+  "exogenous_diff_y": {
+   "rc": 198,
+   "text": "D.invest contains the current or a future value of the dependent variable differences, seasonal differences, and leads of invest cannot be regressors"
+  },
+  "endogenous_diff_y": {
+   "rc": 198,
+   "text": "D.invest contains the current or a future value of the dependent variable it cannot be a regressor; lags of invest belong in predetermined()"
+  },
+  "endogenous_lead_y": {
+   "rc": 198,
+   "text": "F.invest contains the current or a future value of the dependent variable it cannot be a regressor; lags of invest belong in predetermined()"
+  },
+  "predetermined_ld_y": {
+   "rc": 198,
+   "text": "LD.invest contains the current or a future value of the dependent variable it cannot be a regressor; lags of invest belong in predetermined()"
+  },
+  "iv_diff_y": {
+   "rc": 198,
+   "text": "D.invest contains the current or a future value of the dependent variable it cannot be an instrument; only lags of invest may appear in iv()"
+  },
+  "iv_lead_y": {
+   "rc": 198,
+   "text": "F2.invest contains the current or a future value of the dependent variable it cannot be an instrument; only lags of invest may appear in iv()"
+  },
+  "bad_operator": {
+   "rc": 198,
+   "text": "Q:  operator invalid"
+  },
+  "bad_name": {
+   "rc": 198,
+   "text": "2cashflow invalid name"
+  },
+  "ok_roles": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Endogenous:    tobin_q Predetermined: L.debt Note: about 588 instrument columns; consider maxlag() or collapse. Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshol"
+  },
+  "ok_lag_not_overlapping": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Endogenous:    L.cashflow Note: about 392 instrument columns; consider maxlag() or collapse. Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =   "
+  },
+  "ok_exogenous_earlier_lag": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow L.tobin_q Endogenous:    L2.tobin_q Note: about 377 instrument columns; consider maxlag() or collapse. Grid search over 10 \u03b3 points in [0, .6044]... ------------------------------------------------------------------------------ Threshold estimat"
+  },
+  "ok_predetermined_lag_exogenous_now": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Predetermined: L.cashflow Note: about 406 instrument columns; consider maxlag() or collapse. Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =   "
+  },
+  "ok_iv_far_lag": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Endogenous:    tobin_q Extra IVs:     L2.tobin_q Note: about 406 instrument columns; consider maxlag() or collapse. Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Thre"
+  },
+  "ok_iv_fod_lag": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FOD (Arellano-Bover 1995)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Extra IVs:     L.invest Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =   .602435 Specification tests: Hansen J = 404.403  (df=111)  p = 0.00"
+  },
+  "ok_conttest": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow debt Grid search over 10 \u03b3 points in [0, .6024]... Grid bootstrap CI  (. per \u03b3 point, 10 total) .......... done Linearity test   (. per bootstrap, 10 total) done Continuity test  (. per bootstrap, 10 total) done ---------------------------------"
+  },
+  "overlap_endog_x": {
+   "rc": 198,
+   "text": "endogenous() vars must not appear in indepvars: cashflow"
+  },
+  "overlap_endog_x_lag": {
+   "rc": 198,
+   "text": "endogenous() vars must not appear in indepvars: L.cashflow"
+  },
+  "overlap_endog_x_l0": {
+   "rc": 198,
+   "text": "endogenous() vars must not appear in indepvars: cashflow"
+  },
+  "overlap_endog_exog": {
+   "rc": 198,
+   "text": "endogenous() and exogenous() vars must not overlap: tobin_q"
+  },
+  "overlap_x_exog": {
+   "rc": 198,
+   "text": "indepvars and exogenous() vars must not overlap: cashflow"
+  },
+  "overlap_predet_x": {
+   "rc": 198,
+   "text": "predetermined() vars must not appear in indepvars: cashflow"
+  },
+  "overlap_predet_exog": {
+   "rc": 198,
+   "text": "predetermined() and exogenous() vars must not overlap: tobin_q"
+  },
+  "overlap_predet_endog": {
+   "rc": 198,
+   "text": "predetermined() and endogenous() vars must not overlap: tobin_q"
+  },
+  "iv_declared_endog": {
+   "rc": 198,
+   "text": "iv() may not contain variables declared endogenous() or predetermined() conflicting variables: z1"
+  },
+  "iv_declared_predet": {
+   "rc": 198,
+   "text": "iv() may not contain variables declared endogenous() or predetermined() conflicting variables:  z1"
+  },
+  "static_empty": {
+   "rc": 198,
+   "text": "a static model requires at least one regressor or external iv() add regressors/an external iv(), or drop -static- to use the dynamic L.invest"
+  },
+  "conttest_kink": {
+   "rc": 198,
+   "text": "Warning: debt is not a regressor, so kink estimates the one-sided hinge (q-\u03b3)\u00b71(q>\u03b3); add debt to the regressors for the standard kink model. conttest is not allowed with kink: the fitted model is the kink model"
+  },
+  "conttest_q_missing": {
+   "rc": 198,
+   "text": "conttest requires debt as a contemporaneous regressor; otherwise the kink model is not nested in the estimated jump model."
+  },
+  "dup_x": {
+   "rc": 198,
+   "text": "duplicate variables in indepvars after time-series expansion each variable may appear only once within a list"
+  },
+  "dup_x_l0": {
+   "rc": 198,
+   "text": "duplicate variables in indepvars after time-series expansion each variable may appear only once within a list"
+  },
+  "dup_x_lag": {
+   "rc": 198,
+   "text": "duplicate variables in indepvars after time-series expansion each variable may appear only once within a list"
+  },
+  "dup_exogenous": {
+   "rc": 198,
+   "text": "duplicate variables in exogenous() after time-series expansion each variable may appear only once within a list"
+  },
+  "dup_endogenous": {
+   "rc": 198,
+   "text": "duplicate variables in endogenous() after time-series expansion each variable may appear only once within a list"
+  },
+  "dup_predetermined": {
+   "rc": 198,
+   "text": "duplicate variables in predetermined() after time-series expansion each variable may appear only once within a list"
+  },
+  "dup_iv": {
+   "rc": 198,
+   "text": "duplicate variables in iv() after time-series expansion each variable may appear only once within a list"
+  },
+  "y_in_x": {
+   "rc": 198,
+   "text": "the dependent variable may not appear in indepvars, exogenous(), endogenous(), (the dynamic model adds L.invest automatically)"
+  },
+  "y_in_x_l0": {
+   "rc": 198,
+   "text": "the dependent variable may not appear in indepvars, exogenous(), endogenous(), (the dynamic model adds L.invest automatically)"
+  },
+  "y_endogenous": {
+   "rc": 198,
+   "text": "the dependent variable may not appear in indepvars, exogenous(), endogenous(), (the dynamic model adds L.invest automatically)"
+  },
+  "y_iv": {
+   "rc": 198,
+   "text": "the dependent variable may not appear in indepvars, exogenous(), endogenous(), (the dynamic model adds L.invest automatically)"
+  },
+  "q_is_y": {
+   "rc": 198,
+   "text": "qx() may not be the dependent variable for a self-exciting threshold, create the lag first: gen Lq = L.invest"
+  },
+  "exogenous_lag_of_endogenous": {
+   "rc": 198,
+   "text": "L.tobin_q is declared strictly exogenous, but it is a lag (or the same date) of tobin_q, which is declared in endogenous() or predetermined(); declare L.tobin_q in predetermined() or endogenous() instead"
+  },
+  "exogenous_same_date_as_predetermined": {
+   "rc": 198,
+   "text": "L.cashflow is declared strictly exogenous, but it is a lag (or the same date) of cashflow, which is declared in endogenous() or predetermined(); declare L.cashflow in predetermined() or endogenous() instead"
+  },
+  "exogenous_lag3_of_endogenous_lag2": {
+   "rc": 198,
+   "text": "L3.tobin_q is declared strictly exogenous, but it is a lag (or the same date) of tobin_q, which is declared in endogenous() or predetermined(); declare L3.tobin_q in predetermined() or endogenous() instead"
+  },
+  "exogenous_difference_of_endogenous": {
+   "rc": 198,
+   "text": "D.tobin_q is declared strictly exogenous, but it is a lag (or the same date) of tobin_q, which is declared in endogenous() or predetermined(); declare D.tobin_q in predetermined() or endogenous() instead"
+  },
+  "iv_lag_too_short": {
+   "rc": 198,
+   "text": "L.tobin_q is not a valid instrument under method(fd): it is correlated with the transformed error; instruments built on tobin_q need a lag of at least 2 here"
+  },
+  "iv_lag_depvar_fd": {
+   "rc": 198,
+   "text": "L.invest is not a valid instrument under method(fd): it is correlated with the transformed error; instruments built on invest need a lag of at least 2 here"
+  },
+  "iv_lag_predetermined": {
+   "rc": 198,
+   "text": "tobin_q is not a valid instrument under method(fd): it is correlated with the transformed error; instruments built on tobin_q need a lag of at least 2 here"
+  },
+  "ok_static_predetermined_lag": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: cashflow Predetermined: L.invest Grid search over 10 \u03b3 points in [0, .6024]... ------------------------------------------------------------------------------ Threshold estimate: \u03b3\u0302 =  .0669372 Specification tests: Hansen J = 377.346  (df=111)  p = 0.0000 AR(1): z"
+  },
+  "ok_dynamic_lag2_exogenous_as_predetermined": {
+   "rc": 0,
+   "text": "------------------------------------------------------------------------------ Dynamic Panel Threshold Model (Seo-Shin 2016, Gong-Seo 2026) ------------------------------------------------------------------------------ Transformation: FD (Arellano-Bond 1991)   Panel: firm   Time: year Dep. var: invest   Threshold (q): debt Regressors: L.invest cashflow Predetermined: L2.invest L3.invest Note: about 516 instrument columns; consider maxlag() or collapse. Grid search over 10 \u03b3 points in [0, .6047]... ------------------------------------------------------------------------------ Threshold estimate"
+  },
+  "auto_lag_x": {
+   "rc": 198,
+   "text": "L.invest is added automatically in the dynamic model L.invest is algebraically the same lag; remove it"
+  },
+  "auto_lag_x_l1": {
+   "rc": 198,
+   "text": "L.invest is added automatically in the dynamic model L.invest is algebraically the same lag; remove it"
+  },
+  "auto_lag_fl2": {
+   "rc": 198,
+   "text": "L.invest is added automatically in the dynamic model L.invest is algebraically the same lag; remove it"
+  },
+  "auto_lag_l2f": {
+   "rc": 198,
+   "text": "L.invest is added automatically in the dynamic model L.invest is algebraically the same lag; remove it"
+  },
+  "auto_lag_endogenous": {
+   "rc": 198,
+   "text": "L.invest is added automatically in the dynamic model L.invest is algebraically the same lag; remove it"
+  },
+  "auto_lag_predetermined": {
+   "rc": 198,
+   "text": "L.invest is added automatically in the dynamic model L.invest is algebraically the same lag; remove it"
+  },
+  "auto_lag_exogenous": {
+   "rc": 198,
+   "text": "L.invest is added automatically in the dynamic model L.invest is algebraically the same lag; remove it"
+  },
+  "static_lag_exogenous": {
+   "rc": 198,
+   "text": "L.invest is a lag of the dependent variable and cannot be strictly exogenous declare it in predetermined() instead of indepvars or exogenous()"
+  },
+  "auto_lag_ld_is_not_the_lag": {
+   "rc": 198,
+   "text": "LD.invest contains the current or a future value of the dependent variable differences, seasonal differences, and leads of invest cannot be regressors"
+  }
+ }
+}

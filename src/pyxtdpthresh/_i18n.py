@@ -7,6 +7,7 @@ translated or reworded without touching the code that raises it.
 from __future__ import annotations
 
 from ._config import get_options
+from ._i18n_spec import SPEC_MESSAGES
 from ._types import Lang
 
 #: key -> {language: template}.  Templates use ``str.format`` placeholders.
@@ -97,6 +98,7 @@ _CATALOGUE: dict[str, dict[str, str]] = {
         "fr": "Type de fichier non géré « {suffix} » (utilisez .dta, .csv ou .parquet).",
     },
 }
+_CATALOGUE.update(SPEC_MESSAGES)
 
 
 def message(key: str, lang: Lang | None = None, **fields: object) -> str:

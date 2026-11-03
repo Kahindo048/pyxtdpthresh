@@ -12,11 +12,16 @@ class PyxdpthreshError(Exception):
     """Base class of every error raised by pyxtdpthresh."""
 
     stata_code: int | None = None
+    #: Key of the message in the catalogue (identifies the rule that failed).
+    key: str | None = None
 
-    def __init__(self, message: str, *, stata_code: int | None = None) -> None:
+    def __init__(
+        self, message: str, *, stata_code: int | None = None, key: str | None = None
+    ) -> None:
         super().__init__(message)
         if stata_code is not None:
             self.stata_code = stata_code
+        self.key = key
 
 
 class DataError(PyxdpthreshError, ValueError):

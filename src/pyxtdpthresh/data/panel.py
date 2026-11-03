@@ -104,11 +104,9 @@ class Panel:
 
         This is Stata's ``L{k}.x`` with a time step of 1: it looks up the *period*
         ``t - k`` in the unit, so a gap in the calendar gives a missing value rather than
-        the previous observation.
+        the previous observation.  A negative ``k`` gives the lead ``F{-k}.x``.
         """
         x = np.asarray(x, dtype=np.float64)
-        if k < 0:
-            raise ValueError("k must be non-negative")
         if self.n_rows == 0:
             return np.zeros(0, dtype=np.float64)
         unit = self.unit_of_row

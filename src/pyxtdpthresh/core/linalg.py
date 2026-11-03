@@ -30,6 +30,7 @@ import numpy as np
 from scipy.linalg import LinAlgError, cho_factor, cho_solve
 
 from pyxtdpthresh._types import BoolArray, FloatArray
+from pyxtdpthresh.kernels.sweep import sweep
 
 #: Relative pivot tolerance of ``invsym``: Stata drops a pivot at 8.8e-10 times the original
 #: diagonal element and keeps it at 1.17e-9 times, so 1e-9 is adopted.
@@ -70,29 +71,7 @@ def _pivot_floor(diag: FloatArray) -> FloatArray:
 def _sweep(a: FloatArray) -> tuple[FloatArray, BoolArray]:
     """Generalised inverse by pivoted sweep; returns it with the dropped-pivot mask."""
     # Stata: invsym (Mata built-in); order and tolerance measured, see module docstring.
-    work = np.array(a, dtype=np.float64, copy=True)
-    n = work.shape[0]
-    floor = _pivot_floor(np.diag(work))
-    dropped = np.zeros(n, dtype=np.bool_)
-    pending = np.ones(n, dtype=np.bool_)
-    for _ in range(n):
-        current = np.where(pending, np.diag(work), -np.inf)
-        k = int(np.argmax(current))
-        pending[k] = False
-        pivot = work[k, k]
-        if not pivot > floor[k]:  # also catches NaN
-            work[k, :] = 0.0
-            work[:, k] = 0.0
-            dropped[k] = True
-            continue
-        row = work[k, :] / pivot
-        col = work[:, k].copy()
-        col[k] = 0.0
-        work -= np.outer(col, row)
-        work[k, :] = row
-        work[:, k] = -col / pivot
-        work[k, k] = 1.0 / pivot
-    return (work + work.T) / 2.0, dropped
+    return sweep(a, _pivot_floor(np.diag(a)))
 
 
 def _safe_without_drop(diag: FloatArray, trace_inv: FloatArray) -> BoolArray:
@@ -256,6 +235,49 @@ def syminv(a: FloatArray) -> SymInv:
     if not np.all(np.isfinite(inv)):
         return rejected
     return SymInv(True, inv)
+
+
+def syminv_batch(a: FloatArray) -> tuple[BoolArray, FloatArray]:
+    """Admission and inverse of many symmetric matrices at once, ``(G, p, p)``.
+
+    The decision is that of :func:`syminv` (positive definite after equilibration, condition at
+    most ``1e12``, inverse checked against the identity), reached with eigenvalues and one batched
+    inverse instead of a sweep per matrix.  The two can differ only for a matrix whose condition
+    number sits at the limit.
+
+    Returns
+    -------
+    ok, inverse
+        Admission mask ``(G,)`` and the inverses (``nan`` where not admitted).
+    """
+    arr = np.asarray(a, dtype=np.float64)
+    size = arr.shape[1]
+    inverse = np.full(arr.shape, np.nan)
+    ok = np.all(np.isfinite(arr), axis=(1, 2))
+    diag = np.diagonal(arr, axis1=1, axis2=2)
+    ok &= np.all(diag > 0.0, axis=1)
+    if not ok.any():
+        return ok, inverse
+    index = np.flatnonzero(ok)
+    scale = np.sqrt(diag[index])
+    equil = arr[index] / (scale[:, :, None] * scale[:, None, :])
+    equil = (equil + np.swapaxes(equil, 1, 2)) / 2.0
+    eigenvalues = np.linalg.eigvalsh(equil)
+    good = eigenvalues[:, 0] > 0.0
+    cond = np.where(good, eigenvalues[:, -1] / np.where(good, eigenvalues[:, 0], 1.0), np.inf)
+    good &= cond <= 1e12
+    if good.any():
+        sel = np.flatnonzero(good)
+        inv_eq = np.linalg.inv(equil[sel])
+        eye = np.eye(size)
+        err = np.max(np.abs(np.matmul(equil[sel], inv_eq) - eye), axis=(1, 2))
+        passed = err <= np.maximum(1e-8, 10.0 * size * _EPS * cond[sel])
+        full = inv_eq / (scale[sel][:, :, None] * scale[sel][:, None, :])
+        passed &= np.all(np.isfinite(full), axis=(1, 2))
+        inverse[index[sel[passed]]] = full[passed]
+        good[sel[~passed]] = False
+    ok[index] = good
+    return ok, inverse
 
 
 # ------------------------------------------------------------------- psd_ok and objtol

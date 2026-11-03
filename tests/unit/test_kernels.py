@@ -10,9 +10,10 @@ import pytest
 from scipy import sparse
 
 from pyxtdpthresh._config import option_context
-from pyxtdpthresh.kernels import moments, units
+from pyxtdpthresh.kernels import moments, sweep, units
 from pyxtdpthresh.kernels._jit import set_threads
 from pyxtdpthresh.kernels.reference import moments as ref_moments
+from pyxtdpthresh.kernels.reference import sweep as ref_sweep
 from pyxtdpthresh.kernels.reference import units as ref_units
 from pyxtdpthresh.kernels.warmup import warmup
 
@@ -112,6 +113,31 @@ def test_unit_moments_unequal_units_and_errors():
         units.unit_moments(z, resid[:5], ptr)
 
 
+@pytest.mark.parametrize(("n", "rank"), [(1, 1), (5, 5), (30, 10), (60, 60), (100, 40)])
+def test_sweep_equals_reference_including_dropped_pivots(n, rank):
+    x = np.random.default_rng(n).standard_normal((n, rank))
+    a = x @ x.T
+    floor = np.maximum(1e-9 * np.diag(a), 9e-20)
+    inv, dropped = sweep.sweep(a, floor)
+    ref_inv, ref_dropped = ref_sweep.sweep(a, floor)
+    np.testing.assert_array_equal(dropped, ref_dropped)
+    np.testing.assert_allclose(inv, ref_inv, rtol=1e-13, atol=1e-13)
+    assert dropped.sum() == max(n - rank, 0)
+
+
+def test_sweep_nan_diagonal_and_bad_shapes():
+    a = np.array([[2.0, 0.0, 0.0], [0.0, np.nan, 0.0], [0.0, 0.0, 3.0]])
+    floor = np.full(3, 1e-9)
+    inv, dropped = sweep.sweep(a, floor)
+    ref_inv, ref_dropped = ref_sweep.sweep(a, floor)
+    np.testing.assert_array_equal(dropped, ref_dropped)
+    np.testing.assert_array_equal(inv, ref_inv)
+    with pytest.raises(ValueError):
+        sweep.sweep(np.ones((2, 3)), np.ones(2))
+    with pytest.raises(ValueError):
+        sweep.sweep(np.eye(3), np.ones(2))
+
+
 def test_kernels_agree_with_jit_disabled():
     """The reference test of A.3.2: same answers with NUMBA_DISABLE_JIT=1."""
     code = textwrap.dedent(
@@ -120,20 +146,26 @@ def test_kernels_agree_with_jit_disabled():
         import numpy as np
         sys.path.insert(0, ".")
         from tests.unit.test_kernels import make_problem
-        from pyxtdpthresh.kernels import moments, units
+        from pyxtdpthresh.kernels import moments, sweep, units
         z, ptr, lev, w, wl, q, grid, up = make_problem(9)
         a = moments.regime_moments(z, ptr, lev, w, wl, q, grid)
         b = units.unit_moments(z, np.arange(float(z.shape[0])), up)
         np.save(sys.argv[1], a); np.save(sys.argv[2], b)
+        x = np.random.default_rng(3).standard_normal((40, 15)); m = x @ x.T
+        np.save(sys.argv[3], sweep.sweep(m, np.maximum(1e-9 * np.diag(m), 9e-20))[0])
         """
     )
     import tempfile
 
     z, ptr, lev, w, wl, q, grid, up = make_problem(9)
     with tempfile.TemporaryDirectory() as tmp:
-        fa, fb = os.path.join(tmp, "a.npy"), os.path.join(tmp, "b.npy")
+        fa, fb, fc = (os.path.join(tmp, f"{n}.npy") for n in "abc")
         env = {**os.environ, "NUMBA_DISABLE_JIT": "1"}
-        subprocess.run([sys.executable, "-c", code, fa, fb], check=True, env=env)
+        subprocess.run([sys.executable, "-c", code, fa, fb, fc], check=True, env=env)
+        x = np.random.default_rng(3).standard_normal((40, 15))
+        m = x @ x.T
+        expected, _ = sweep.sweep(m, np.maximum(1e-9 * np.diag(m), 9e-20))
+        np.testing.assert_allclose(np.load(fc), expected, rtol=1e-12, atol=1e-12)
         np.testing.assert_allclose(
             np.load(fa), moments.regime_moments(z, ptr, lev, w, wl, q, grid), rtol=1e-12, atol=1e-12
         )
