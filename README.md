@@ -6,12 +6,12 @@ output against Stata 17 MP, and adds what Stata does not have: a result object t
 and plots itself, plain-language diagnostics, a robustness check, and a simulation toolkit.
 
 > **Status: alpha (0.0.1).** The estimators, inference and tools below are implemented and tested.
-> The package is not on PyPI yet; install it from the wheel or from the source.
+> Install it from PyPI with `pip install pyxtdpthresh`.
 
 ## Install
 
 ```bash
-pip install pyxtdpthresh-0.0.1-py3-none-any.whl       # or: pip install .  from a checkout
+pip install pyxtdpthresh                               # or: pip install .  from a checkout
 pip install "pyxtdpthresh[export]"                     # Word and Excel tables (python-docx, openpyxl)
 python -c "import pyxtdpthresh; pyxtdpthresh.warmup()" # once: compiles the Numba kernels (a few seconds)
 ```
