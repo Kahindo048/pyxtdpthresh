@@ -26,3 +26,51 @@ references:
     start: 169
     end: 186
     year: 2016
+  - type: article
+    title: "Estimation of dynamic panel threshold model using Stata"
+    authors:
+      - family-names: Seo
+        given-names: Myung Hwan
+      - family-names: Kim
+        given-names: Sueyoul
+      - family-names: Kim
+        given-names: Young-Joo
+    journal: "Stata Journal"
+    volume: 19
+    issue: 3
+    year: 2019
+    doi: "10.1177/1536867X19874243"
+    notes: "The program xthenreg, reproduced by pyxtdpthresh."
+  - type: report
+    title: "xtdpthresh: Dynamic panel threshold regression for unbalanced panels, with endogenous regressors and continuity-robust inference"
+    authors:
+      - family-names: Nguyen
+        given-names: Duy Chinh
+      - family-names: Lai
+        given-names: Nhat Duy
+    institution:
+      name: "SSRN"
+    year: 2026
+    url: "https://ssrn.com/abstract=6619058"
+    notes: "The program xtdpthresh (version 0.9.38), reproduced by pyxtdpthresh."
+  - type: article
+    title: "Bootstraps for dynamic panel threshold models"
+    authors:
+      - family-names: Gong
+        given-names: Woosik
+      - family-names: Seo
+        given-names: Myung Hwan
+    journal: "Journal of Econometrics"
+    volume: 253
+    start: 106153
+    year: 2026
+  - type: article
+    title: "Threshold effects in non-dynamic panels: Estimation, testing, and inference"
+    authors:
+      - family-names: Hansen
+        given-names: Bruce E.
+    journal: "Journal of Econometrics"
+    volume: 93
+    start: 345
+    end: 368
+    year: 1999

@@ -216,6 +216,9 @@ def final_variance(
         Values of ``q`` that define the threshold grid (for the ``wind_same_threshold`` flag).
     """
     # Stata: end of xdpt2_grid_search (xtdpthresh.ado:6210-6342, 5859-5891)
+    # Stata: xdpt2_kink_apply_joint (xtdpthresh.ado:5237): the joint block replaces the conditional
+    # Stata: xdpt2_kink_joint_V (xtdpthresh.ado:5191): theta block of the joint sandwich
+    # Stata: xdpt2_kink_joint_wind (xtdpthresh.ado:5210): the same with the Windmeijer correction
     n = stack.n_rows
     step = problem_at(stack, fit.gamma)
     omega = omega_of(stack, step.residual(stack, fit.theta), center=center)

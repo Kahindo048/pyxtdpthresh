@@ -57,18 +57,25 @@ class BootstrapStreams:
     def __init__(self, seed: int | None = None) -> None:
         self.seed = None if seed is None else int(seed)
         self._shared: StataRNG | None = None
+        self._streams: dict[str, StataRNG] = {}
         if self.seed is None:
             self._shared = StataRNG(int(np.random.default_rng().integers(0, MAX_SEED + 1)))
 
     def stream(self, component: str) -> StataRNG:
-        """Return the generator of ``component`` (``"threshold"``, ``"linearity"``, ...)."""
+        """Return the generator of ``component`` (``"threshold"``, ``"linearity"``, ...).
+
+        With a seed the generator starts at ``seed + offset`` the first time it is requested and
+        goes on from there, so successive candidates of a component take new draws.
+        """
         # Stata: xdpt2_component_seed (xtdpthresh.ado:4796)
         if component not in OFFSETS:
             raise KeyError(f"unknown bootstrap component {component!r}")
         if self._shared is not None:
             return self._shared
         assert self.seed is not None
-        return StataRNG(component_seed(self.seed, OFFSETS[component]))
+        if component not in self._streams:  # created once: later requests continue the stream
+            self._streams[component] = StataRNG(component_seed(self.seed, OFFSETS[component]))
+        return self._streams[component]
 
     def component_seed(self, component: str) -> int | None:
         """Seed the component starts from (``None`` without ``rseed``)."""

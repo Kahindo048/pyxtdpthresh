@@ -73,12 +73,16 @@ class LinearityTest:
 def tested_length(problem: XthenregProblem) -> int:
     """Number of coefficients tested: all regime coefficients, or 2 with a kink (a quirk)."""
     # Stata: sup_wald_cal (xthenreg.ado:1697-1714)
+    # STATA-QUIRK: with a kink the tested block has two entries (dlt_len = 2: the last linear
+    # coefficient and the kink coefficient), not one; kept so that the statistic equals Stata's.
     return 2 if problem.kink else problem.k + 1
 
 
 def sup_wald(problem: XthenregProblem, fit: TwoStepFit) -> SupWald:
     """Sup-Wald statistic of the sample, with a full two-step estimate at each grid point."""
     # Stata: sup_wald_cal (xthenreg.ado:1683)
+    # Stata: cov_con_b (xthenreg.ado:2034) and cov_con_kink_b (xthenreg.ado:2080): the covariance
+    # of the tested coefficients at each grid point, for the jump and for the kink
     k, n, d = problem.k, problem.n_units, tested_length(problem)
     n_grid = fit.grid.size
     wald = np.full(n_grid, np.nan)

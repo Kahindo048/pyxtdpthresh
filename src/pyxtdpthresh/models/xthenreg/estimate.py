@@ -63,6 +63,7 @@ def estimate(
     result = cov_mod.covariance(problem, fit, h_0)
 
     sup, boot_sup, boots_p = float("nan"), np.empty(0), NO_BOOTSTRAP
+    draws_given = draws is not None
     if boot_reps > 0:
         if draws is None:
             seed = int(np.random.default_rng().integers(0, 2**31)) if seed is None else seed
@@ -91,4 +92,19 @@ def estimate(
         bandwidth=result.bandwidth,
         static=static,
         kink=kink,
+        names=coefficient_labels(data.names, static=static, kink=kink),
+        y_name=data.y_name,
+        q_name=data.q_name,
+        seed=seed if boot_reps > 0 and draws_given is False else None,
     )
+
+
+def coefficient_labels(regressors: tuple[str, ...], *, static: bool, kink: bool) -> tuple[str, ...]:
+    """Labels of ``e(b)`` of ``xthenreg``: slopes, regime shifts, then the threshold ``r``."""
+    # Stata: coef_list (xthenreg.ado:145-300)
+    lag = () if static else ("Lag_y",)
+    slopes = tuple(f"{name}_b" for name in (*lag, *regressors))
+    if kink:
+        return (*slopes, "kink_slope", "r")
+    shifts = tuple(f"{name}_d" for name in (*lag, *regressors))
+    return (*slopes, "cons_d", *shifts, "r")

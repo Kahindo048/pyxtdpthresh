@@ -148,6 +148,7 @@ def solve_fixed_weight(
         Number of stacked equations ``n``.
     """
     # Stata: xdpt2_solve_gmm_1step_pre (xtdpthresh.ado:3917)
+    # Stata: xdpt2_solve_gmm_1step (xtdpthresh.ado:3880), the variant that also returns the variance
     if n_rows < MIN_EQUATIONS or weight.shape != (zw.shape[0], zw.shape[0]):
         return _REJECTED
     w_zw = weight @ zw

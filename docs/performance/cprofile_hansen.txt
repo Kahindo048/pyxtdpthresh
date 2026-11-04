@@ -1,0 +1,33 @@
+         201803 function calls (201527 primitive calls) in 5.321 seconds
+
+   Ordered by: internal time
+   List reduced from 677 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      201    2.596    0.013    3.183    0.016 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\inference\bootstrap\objective.py:101(criterion)
+      201    0.573    0.003    0.573    0.003 {built-in method numpy._core._multiarray_umath.c_einsum}
+       99    0.374    0.004    3.982    0.040 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\models\xtdpthresh\bootstrap.py:484(distances)
+        4    0.218    0.055    0.518    0.129 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\inference\bootstrap\objective.py:70(make_family)
+      100    0.129    0.001    0.129    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\inference\bootstrap\objective.py:149(sample_moments)
+      611    0.090    0.000    0.720    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\core\linalg.py:192(syminv)
+      301    0.058    0.000    0.457    0.002 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\core\gmm.py:134(solve_fixed_weight)
+      105    0.055    0.001    0.089    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\models\xtdpthresh\stack.py:135(transform_levels)
+      611    0.049    0.000    0.065    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\linalg\_linalg.py:1909(_cond_svdvals)
+     6659    0.048    0.000    0.048    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+      103    0.042    0.000    0.087    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\models\xtdpthresh\stack.py:128(_regime_levels)
+      111    0.041    0.000    0.042    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\lib\_shape_base_impl.py:607(column_stack)
+      611    0.031    0.000    0.360    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\core\linalg.py:87(_invsym)
+     2922    0.031    0.000    0.031    0.000 {method 'astype' of 'numpy.ndarray' objects}
+      103    0.027    0.000    0.078    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\kernels\units.py:35(unit_moments)
+     1226    0.026    0.000    0.031    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\_core\numeric.py:905(outer)
+     4383    0.025    0.000    0.050    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\_core\fromnumeric.py:86(_wrapreduction_any_all)
+      106    0.024    0.000    0.024    0.000 {built-in method scipy.sparse._sparsetools.csc_matvec}
+      611    0.024    0.000    0.076    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\scipy\_lib\_util.py:1102(wrapper)
+      612    0.024    0.000    0.049    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\linalg\_linalg.py:789(cholesky)
+      611    0.022    0.000    0.028    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\scipy\linalg\_decomp_cholesky.py:271(_cho_solve)
+      104    0.021    0.000    0.021    0.000 {built-in method scipy.sparse._sparsetools.csr_matvecs}
+      100    0.021    0.000    0.032    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\models\xtdpthresh\bootstrap.py:88(_alternative_minimum)
+     1222    0.020    0.000    0.082    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\lib\_twodim_base_impl.py:537(triu)
+     1222    0.019    0.000    0.019    0.000 {method 'outer' of 'numpy.ufunc' objects}
+
+

@@ -68,7 +68,8 @@ def test_build_panel_keys_from_multiindex():
 
 def test_duplicates_are_reported_with_examples():
     df = pd.concat([long_frame(), long_frame().iloc[[7]]])
-    with pytest.raises(DataError, match=r"\(1, 2002\)") as err:
+    # the second unit has the identifier 20: the message names it, not its internal code 1
+    with pytest.raises(DataError, match=r"\(firm=20, year=2002\)") as err:
         build_panel(df, ["y"], id="firm", time="year")
     assert err.value.stata_code == 451
 

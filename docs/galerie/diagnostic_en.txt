@@ -1,0 +1,29 @@
+== xtdpthresh FD ==
+Diagnostic report: 0 warning(s), 3 notice(s)
+
+[notice] The confidence set of the threshold reaches the lower edge of the candidates: it is cut by the grid, not by the data.
+    Recommendation: Widen the grid (lower trim) before reading the interval.
+[notice] The confidence set of the threshold has 5 separate intervals: the data support several distant thresholds.
+    Recommendation: Report the segments, not only their hull, and look at plot(fit, 'ci').
+[notice] Another threshold, 0.3297, fits almost as well as 0.2564 (criterion within 3.8): the estimate can jump from one to the other with the grid.
+    Recommendation: Refine the grid (grid=, refine=) and check that the conclusions hold at both.
+
+== xtdpthresh FOD ==
+Diagnostic report: 1 warning(s), 2 notice(s)
+
+[warning] The upper regime has only 653 equations (9.6 %) from 214 units.
+    Recommendation: Raise minregime or move the threshold range (trim) so that each regime keeps enough observations.
+[notice] The confidence set of the threshold has 6 separate intervals: the data support several distant thresholds.
+    Recommendation: Report the segments, not only their hull, and look at plot(fit, 'ci').
+[notice] Another threshold, 0.2564, fits almost as well as 0.4762 (criterion within 3.8): the estimate can jump from one to the other with the grid.
+    Recommendation: Refine the grid (grid=, refine=) and check that the conclusions hold at both.
+
+== xtdpthresh kink ==
+Diagnostic report: 1 warning(s), 2 notice(s)
+
+[warning] The Hansen test rejects the over-identifying restrictions (p = 0.000): some instruments may be invalid or the model misspecified.
+    Recommendation: Restrict the instrument lags (maxlag) or treat suspect variables as exogenous or predetermined only if the economics allows it.
+[notice] The confidence set of the threshold reaches the upper edge of the candidates: it is cut by the grid, not by the data.
+    Recommendation: Widen the grid (lower trim) before reading the interval.
+[notice] The criterion profile is flat: 52 % of the thresholds are within 3.8 of the minimum.
+    Recommendation: The estimated threshold is not sharply determined; compare it with the confidence set and plot(fit, 'profile').

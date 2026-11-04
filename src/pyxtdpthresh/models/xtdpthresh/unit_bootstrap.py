@@ -18,14 +18,12 @@ It is an experimental extension beyond the common-T theory; the command says so.
 
 from __future__ import annotations
 
-import math
-
 import numpy as np
 
 from pyxtdpthresh._types import FloatArray
 from pyxtdpthresh.core.linalg import syminv_batch
 from pyxtdpthresh.inference.bootstrap.draws import BootstrapStreams
-from pyxtdpthresh.inference.bootstrap.objective import is_degenerate, profile_min
+from pyxtdpthresh.inference.bootstrap.objective import usable_minimum
 from pyxtdpthresh.models.xtdpthresh.estimator import contributing_moments
 from pyxtdpthresh.models.xtdpthresh.stack import Stack
 
@@ -108,6 +106,8 @@ class UnitResampler:
         self, counts: FloatArray, sample: FloatArray, own: FloatArray, w2: FloatArray
     ) -> list[float]:
         """Distances of the valid draws of a chunk (invalid draws are skipped, as in Stata)."""
+        # STATA-QUIRK: a draw whose profile has no usable minimum is skipped, not replaced, so the
+        # chunk can return fewer distances than draws; the missing ones stay NaN in the result.
         w1 = self.w1
         size = counts.shape[0]
         rows = counts @ self.rows
@@ -119,13 +119,8 @@ class UnitResampler:
             size, n_grid, n_moments, n_params
         )
         theta1, objective1 = self._solve(zw, y, w1, rows)
-        picks = np.full(size, -1)
-        for d in range(size):
-            if not usable[d]:
-                continue
-            best, count, high = profile_min(objective1[d], self.gammas)
-            if best >= 0 and not is_degenerate(float(objective1[d, best]), high, count):
-                picks[d] = best
+        best1, _, found1 = usable_minimum(objective1, self.gammas)
+        picks = np.where(usable & found1, best1, -1)
         keep = np.flatnonzero(picks >= 0)
         if keep.size == 0:
             return []
@@ -139,16 +134,11 @@ class UnitResampler:
         zw_own = np.einsum("bi,ilp->blp", counts[keep], own)
         restricted = _quadratic(zw_own[:, None], y[keep], w2_star, rows[keep])[:, 0]
         _, objective2 = self._solve(zw[keep], y[keep], w2_star, rows[keep])
-        out: list[float] = []
-        for d in range(keep.size):
-            best, count, high = profile_min(objective2[d], self.gammas)
-            if best < 0 or is_degenerate(float(objective2[d, best]), high, count):
-                continue
-            if not math.isfinite(restricted[d]):
-                continue
-            low = min(float(restricted[d]), float(objective2[d, best]))
-            out.append(float(restricted[d]) - low)
-        return out
+        _, low2, found2 = usable_minimum(objective2, self.gammas)
+        counted = found2 & np.isfinite(restricted)
+        return [
+            float(r - min(r, m)) for r, m in zip(restricted[counted], low2[counted], strict=True)
+        ]
 
     def _solve(
         self, zw: FloatArray, y: FloatArray, weight: FloatArray, rows: FloatArray

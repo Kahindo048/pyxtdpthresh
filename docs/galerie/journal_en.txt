@@ -1,0 +1,52 @@
+Settings journal
+
+Sample
+  units with equations                          565
+  equations (stacked rows)                      6780
+  units dropped (fewer than two equation rows)  0
+  history used for lags and instruments         whole panel
+
+Model
+  transformation         first differences
+  threshold effect       jump
+  dynamics               dynamic (lagged y added)
+  time effects (td)      no
+  threshold variable     debt
+  endogenous regressors  cashflow, tobin_q, debt
+
+Instruments and weights
+  instruments kept                      25
+  collapsed instruments                 yes
+  collapsed external instruments        yes
+  instrument lags                       3 to 8
+  columns removed: common to all units  0
+  columns removed: empty                0
+  columns removed: duplicates           0
+  columns removed: linear combinations  0
+  first-step weight                     MA(1) (first differences) or (Z'Z)^-1 (deviations)
+  estimator                             two-step GMM
+
+Threshold search
+  grid of thresholds                  uniform
+  grid points requested               100
+  grid points evaluated               100
+  grid points admitted                99
+  range searched                      [0, 0.604442]
+  trimming of the threshold variable  0.1
+  smallest regime allowed             368
+
+Inference
+  variance estimator                 robust
+  variance joint with the threshold  yes
+  kernel bandwidth of the threshold  0.112204
+  confidence level (%)               95
+  bootstrap run                      yes
+  bootstrap type                     wild
+  bootstrap draws                    299
+  bootstrap seed                     20260611
+  points of the confidence-set grid  100
+  confidence-set points unresolved   0
+
+Software
+  package     pyxtdpthresh 0.0.1
+  reproduces  xtdpthresh 0.9.38 (Stata 17)

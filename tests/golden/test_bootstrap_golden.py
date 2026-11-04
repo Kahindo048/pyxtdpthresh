@@ -15,7 +15,7 @@ from validation.bootstrap_cases import GOLDEN, frame
 from validation.compare import ATOL, RTOL
 from validation.estimation_cases import unpack
 
-from pyxtdpthresh._errors import PyxdpthreshWarning, SpecificationError
+from pyxtdpthresh._errors import DataError, PyxdpthreshWarning, SpecificationError
 from pyxtdpthresh.models.xtdpthresh.fit import fit_point
 
 pytestmark = pytest.mark.golden
@@ -27,6 +27,10 @@ _FITS: dict[str, object] = {}
 REFUSAL_TEXT = {
     "cont_without_q": "contemporaneous regressor",
     "coef_twostep_td": "not available with td",
+    "unit_kink": "does not support kink",
+    "unit_fod": "supports method(fd) only",
+    "unit_td": "not available with td",
+    "unit_one_step": "boottype(unit)",
 }
 
 
@@ -140,10 +144,12 @@ def test_refused_requests_match_stata(name):
     case, ref = REFUSED[name], FROZEN[name]
     args = case.full_args()
     y, q, x = args.pop("y"), args.pop("q"), args.pop("x", ())
-    with pytest.raises(SpecificationError) as raised:
+    with pytest.raises((SpecificationError, DataError)) as raised:
         fit_point(frame(case), y, x, q=q, id="firm", time="year", **args)
-    assert raised.value.stata_code == ref["rc"] == 198
+    assert raised.value.stata_code == ref["rc"]
     assert REFUSAL_TEXT[name] in ref["text"]
+    if name == "unit_one_step":
+        assert raised.value.key == "xd_unit_one_step"
 
 
 def test_every_case_was_frozen():

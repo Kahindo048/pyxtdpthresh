@@ -40,7 +40,8 @@ def design_cases() -> tuple[DesignCase, ...]:
     """The six reference cases, plus missing values, an ``if`` clause and T = 15."""
     from validation.cases import XTHENREG_CASES
 
-    base = tuple(DesignCase(**c.__dict__) for c in XTHENREG_CASES)
+    # the design (sample, instruments) does not depend on h_0, which only scales the covariance
+    base = tuple(DesignCase(**c.__dict__) for c in XTHENREG_CASES if c.h_0 is None)
     common = {"y": "invest", "q": "debt", "x": ("cashflow",), "endogenous": ("tobin_q",)}
     extra = (
         DesignCase(tag="m1", drop_by_missing=True, **common),

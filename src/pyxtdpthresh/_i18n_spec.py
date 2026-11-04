@@ -479,6 +479,27 @@ SPEC_MESSAGES: dict[str, dict[str, str]] = {
         "en": "About {cols} instrument columns; consider maxlag or collapse.",
         "fr": "Environ {cols} colonnes d'instruments ; envisager maxlag ou collapse.",
     },
+    "warn_memory": {
+        "en": (
+            "The fit is expected to use about {gb} GB of memory. maxlag or collapse shrink the "
+            "instrument matrix; fewer bootstrap draws (n_boot) shrink the bootstrap."
+        ),
+        "fr": (
+            "L'estimation devrait utiliser environ {gb} Go de mémoire. maxlag ou collapse "
+            "réduisent la matrice d'instruments ; moins de tirages (n_boot) réduisent le bootstrap."
+        ),
+    },
+    "warn_memory_high": {
+        "en": (
+            "The fit is expected to use about {gb} GB of memory and may fail or swap. Use "
+            "collapse or maxlag to shrink the instrument matrix, or estimate on a subsample."
+        ),
+        "fr": (
+            "L'estimation devrait utiliser environ {gb} Go de mémoire et risque d'échouer ou "
+            "de saturer le disque. Utiliser collapse ou maxlag pour réduire la matrice "
+            "d'instruments, ou estimer sur un sous-échantillon."
+        ),
+    },
     "warn_refine_one_step": {
         "en": "refine was not applied because the estimator fell back to one step.",
         "fr": "refine n'a pas été appliqué car l'estimateur est revenu à un pas.",

@@ -1,0 +1,51 @@
+<style>.pyx-table{border-collapse:collapse;font-family:serif;font-size:0.95em}.pyx-table caption{font-weight:bold;margin-bottom:0.4em}.pyx-table th,.pyx-table td{padding:0.1em 0.9em;text-align:center}.pyx-table td:first-child,.pyx-table th:first-child{text-align:left}.pyx-table thead tr:first-child th{border-top:2px solid #000}.pyx-table thead tr:last-child th{border-bottom:1px solid #000}.pyx-table tr.rule td{border-top:1px solid #000}.pyx-table tfoot td{border-top:2px solid #000;font-size:0.85em;text-align:left}.pyx-table tr.block td{font-style:italic;text-align:left}</style>
+<table class="pyx-table">
+<caption>Dynamic threshold models</caption>
+<thead>
+<tr><th></th><th colspan="4"><em>Dependent variable: invest</em></th></tr>
+<tr><th></th><th>xtdpthresh FD</th><th>xtdpthresh FOD</th><th>xtdpthresh kink</th><th>xthenreg</th></tr>
+</thead><tbody>
+<tr class="block"><td colspan="5">Lower regime</td></tr>
+<tr><td>L.invest</td><td>0.306</td><td>0.197<sup>**</sup></td><td>0.257<sup>***</sup></td><td>0.083<sup>***</sup></td></tr>
+<tr><td></td><td>(0.305)</td><td>(0.090)</td><td>(0.065)</td><td>(0.026)</td></tr>
+<tr><td>cashflow</td><td>0.036</td><td>0.028</td><td>−0.029<sup>**</sup></td><td>−0.020<sup>**</sup></td></tr>
+<tr><td></td><td>(0.057)</td><td>(0.038)</td><td>(0.014)</td><td>(0.008)</td></tr>
+<tr><td>tobin_q</td><td>−0.001</td><td>0.003</td><td>0.001</td><td>−0.001<sup>***</sup></td></tr>
+<tr><td></td><td>(0.002)</td><td>(0.002)</td><td>(0.001)</td><td>(0.000)</td></tr>
+<tr><td>debt</td><td>0.858</td><td>−0.268</td><td>−0.215<sup>***</sup></td><td>1.070<sup>***</sup></td></tr>
+<tr><td></td><td>(0.593)</td><td>(0.164)</td><td>(0.056)</td><td>(0.216)</td></tr>
+<tr class="block"><td colspan="5">Change at the threshold</td></tr>
+<tr><td>_cons</td><td>−0.037</td><td>0.181</td><td></td><td>−0.055<sup>***</sup></td></tr>
+<tr><td></td><td>(0.192)</td><td>(0.153)</td><td></td><td>(0.018)</td></tr>
+<tr><td>L.invest</td><td>−0.082</td><td>0.076</td><td></td><td>0.192<sup>***</sup></td></tr>
+<tr><td></td><td>(0.716)</td><td>(0.460)</td><td></td><td>(0.043)</td></tr>
+<tr><td>cashflow</td><td>−0.122</td><td>0.153</td><td></td><td>0.158<sup>***</sup></td></tr>
+<tr><td></td><td>(0.262)</td><td>(0.162)</td><td></td><td>(0.026)</td></tr>
+<tr><td>tobin_q</td><td>−0.002</td><td>0.007</td><td></td><td>0.001<sup>**</sup></td></tr>
+<tr><td></td><td>(0.005)</td><td>(0.006)</td><td></td><td>(0.000)</td></tr>
+<tr><td>debt</td><td>−0.676</td><td>−0.005</td><td>0.265<sup>***</sup></td><td>−1.098<sup>***</sup></td></tr>
+<tr><td></td><td>(0.679)</td><td>(0.214)</td><td>(0.072)</td><td>(0.219)</td></tr>
+<tr class="block"><td colspan="5">Upper regime</td></tr>
+<tr><td>L.invest</td><td>0.224</td><td>0.273</td><td></td><td>0.275<sup>***</sup></td></tr>
+<tr><td></td><td>(0.446)</td><td>(0.443)</td><td></td><td>(0.029)</td></tr>
+<tr><td>cashflow</td><td>−0.086</td><td>0.182</td><td></td><td>0.138<sup>***</sup></td></tr>
+<tr><td></td><td>(0.231)</td><td>(0.145)</td><td></td><td>(0.022)</td></tr>
+<tr><td>tobin_q</td><td>−0.003</td><td>0.010</td><td></td><td>0.000</td></tr>
+<tr><td></td><td>(0.006)</td><td>(0.008)</td><td></td><td>(0.000)</td></tr>
+<tr><td>debt</td><td>0.182</td><td>−0.273<sup>**</sup></td><td>0.051</td><td>−0.028</td></tr>
+<tr><td></td><td>(0.159)</td><td>(0.118)</td><td>(0.055)</td><td>(0.018)</td></tr>
+<tr class="rule"><td>Observations</td><td>6780</td><td>6780</td><td>6780</td><td>-</td></tr>
+<tr><td>Units</td><td>565</td><td>565</td><td>565</td><td>565</td></tr>
+<tr><td>Instruments</td><td>25</td><td>25</td><td>25</td><td>90</td></tr>
+<tr><td>Hansen J (p-value)</td><td>0.876</td><td>0.533</td><td>0.000</td><td>-</td></tr>
+<tr><td>AR(1) (p-value)</td><td>0.000</td><td>0.001</td><td>0.000</td><td>-</td></tr>
+<tr><td>AR(2) (p-value)</td><td>0.262</td><td>0.734</td><td>0.770</td><td>-</td></tr>
+<tr><td>Linearity test (p-value)</td><td>0.007</td><td>0.017</td><td>0.110</td><td>-</td></tr>
+<tr><td>Threshold γ̂</td><td>0.256</td><td>0.476</td><td>0.401</td><td>0.119</td></tr>
+<tr><td>Threshold 95 % interval</td><td>[0.006, 0.421]</td><td>[0.031, 0.537]</td><td>[0.293, 0.604]</td><td>[0.088, 0.149]</td></tr>
+<tr><td>Transformation</td><td>FD</td><td>FOD</td><td>FD</td><td>FD</td></tr>
+<tr><td>Threshold effect</td><td>jump</td><td>jump</td><td>kink</td><td>jump</td></tr>
+<tr><td>Estimator</td><td>two-step</td><td>two-step</td><td>two-step</td><td>-</td></tr>
+</tbody>
+<tfoot><tr><td colspan="5">*p&lt;0.1; **p&lt;0.05; ***p&lt;0.01<br>Standard errors in parentheses.<br>Threshold interval: grid bootstrap (xtdpthresh) or asymptotic (xthenreg).</td></tr></tfoot>
+</table>

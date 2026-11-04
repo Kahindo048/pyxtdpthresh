@@ -127,6 +127,20 @@ XTHENREG_CASES: tuple[XthenregCase, ...] = (
         grid_num=60,
         trim_rate=0.2,
     ),
+    # h_0 other than the default 1.5 (bandwidth multiplier of the covariance, jump models only)
+    XthenregCase(
+        "c7", "invest", "debt", endogenous=("cashflow", "tobin_q", "debt"), grid_num=50, h_0=3.0
+    ),
+    XthenregCase(
+        "c8",
+        "invest",
+        "debt",
+        x=("cashflow",),
+        endogenous=("tobin_q", "debt"),
+        inst=("z1", "z2"),
+        grid_num=50,
+        h_0=0.7,
+    ),
 )
 
 _MATA_EXPORT = """\

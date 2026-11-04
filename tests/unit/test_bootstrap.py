@@ -42,15 +42,15 @@ def test_weights_are_drawn_replication_after_replication_from_the_stata_stream()
     np.testing.assert_allclose(weights, expected.reshape(3, 5).T)
 
 
-def test_with_a_seed_each_component_restarts_at_its_own_offset():
+def test_with_a_seed_each_component_has_its_own_stream_starting_at_its_offset():
     streams = BootstrapStreams(2026)
-    first = streams.stream("linearity").uniform(3)
+    linearity = streams.stream("linearity")
+    assert linearity is streams.stream("linearity")  # one stream per component, continued
+    first = linearity.uniform(3)
     streams.stream("threshold").uniform(100)  # another component must not move it
-    again = streams.stream("linearity").uniform(3)
-    np.testing.assert_array_equal(first, again)
-    np.testing.assert_array_equal(
-        first, StataRNG(component_seed(2026, OFFSETS["linearity"])).uniform(3)
-    )
+    more = streams.stream("linearity").uniform(3)
+    reference = StataRNG(component_seed(2026, OFFSETS["linearity"]))
+    np.testing.assert_array_equal(np.concatenate([first, more]), reference.uniform(6))
     assert streams.component_seed("citest") == (2026 + 477377) % 2**31
 
 

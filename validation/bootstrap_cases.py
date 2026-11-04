@@ -95,7 +95,7 @@ CASES: tuple[VarCase, ...] = (
     _small("unit_fd", boot_type="unit", **_E),
     _small("unit_gaps", "d1", boot_type="unit", **_E),
     _small("unit_collapse", boot_type="unit", collapse=True, **_E),
-    _small("unit_nocenter", boot_type="unit", center=False, **_E),
+    _small("unit_nocenter", boot_type="unit", center=False, collapse=True, **_E),
     _small("unit_static", boot_type="unit", static=True, x=("cashflow", "L.tobin_q")),
     _small("unit_exog_only", boot_type="unit"),
     _small("unit_citest", boot_type="unit", gamma_test=0.2, **_E),

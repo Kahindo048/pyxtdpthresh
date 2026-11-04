@@ -1,0 +1,116 @@
+{
+ "meta": {
+  "stata": "Stata 17.0 MP",
+  "source": "validation/edge_cases.py"
+ },
+ "cases": {
+  "min_n1_t5": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "min_n2_t4": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "min_n3_t3": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "min_n4_t4": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "min_n5_t2": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "min_n20_t3": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "minregime_huge": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "trim_049": {
+   "rc": 198,
+   "scalars": {}
+  },
+  "q_constant": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "q_rare_ones": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "q_binary": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "q_four_values": {
+   "rc": 0,
+   "scalars": {
+    "gamma": 2.0,
+    "N": 240.0,
+    "N_units": 60.0,
+    "N_iv": 14.0,
+    "estimator_twostep": 1.0,
+    "gamma_lo": 0.0,
+    "gamma_hi": 2.84210526315789
+   }
+  },
+  "x_duplicate": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "iv_equals_x": {
+   "rc": 0,
+   "scalars": {
+    "gamma": 0.0854448459365154,
+    "N": 240.0,
+    "N_units": 60.0,
+    "N_iv": 22.0,
+    "estimator_twostep": 1.0,
+    "gamma_lo": null,
+    "gamma_hi": null
+   }
+  },
+  "x_constant": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "units_fewer_than_iv": {
+   "rc": 0,
+   "scalars": {
+    "gamma": 1.26692183631839,
+    "N": 48.0,
+    "N_units": 8.0,
+    "N_iv": 27.0,
+    "estimator_twostep": 0.0,
+    "gamma_lo": null,
+    "gamma_hi": null
+   }
+  },
+  "units_fewer_than_iv_boot": {
+   "rc": 0,
+   "scalars": {
+    "gamma": 1.26692183631839,
+    "N": 48.0,
+    "N_units": 8.0,
+    "N_iv": 27.0,
+    "estimator_twostep": 0.0,
+    "gamma_lo": -2.53766471147537,
+    "gamma_hi": 2.00033611059189
+   }
+  },
+  "y_zero": {
+   "rc": 498,
+   "scalars": {}
+  },
+  "y_constant": {
+   "rc": 498,
+   "scalars": {}
+  }
+ }
+}

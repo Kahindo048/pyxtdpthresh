@@ -22,7 +22,7 @@ import numpy as np
 from pyxtdpthresh._types import FloatArray
 from pyxtdpthresh.core.gmm import FixedWeightFit, cluster_omega, sandwich, solve_fixed_weight
 from pyxtdpthresh.core.linalg import syminv
-from pyxtdpthresh.kernels.units import unit_moments
+from pyxtdpthresh.kernels.units import unit_moments_arrays
 from pyxtdpthresh.models.xtdpthresh.stack import Stack
 
 
@@ -79,7 +79,10 @@ def problem_at(stack: Stack, gamma: float) -> StepProblem:
 
 def moments_by_unit(stack: Stack, resid: FloatArray) -> FloatArray:
     """Moment contribution ``g_i = sum_e z_e resid_e`` of each unit, ``(n_units, L)``."""
-    return unit_moments(stack.z.csr, resid, stack.unit_ptr)
+    # Stata: xdpt2_gsum_by_unit (xtdpthresh.ado:3957-4000)
+    csr = stack.z.csr
+    indptr, indices = stack.z.csr64
+    return unit_moments_arrays(indptr, indices, csr.data, csr.shape, resid, stack.unit_ptr)
 
 
 def contributing_moments(stack: Stack, resid: FloatArray) -> FloatArray:
@@ -88,12 +91,14 @@ def contributing_moments(stack: Stack, resid: FloatArray) -> FloatArray:
     The bootstrap weights are drawn for these units only (a unit without equation takes no draw),
     so the rows line up with the weight matrix.
     """
+    # Stata: xdpt2_dense_uid (xtdpthresh.ado:4740-4759): draws are indexed by contributing units
     moments = moments_by_unit(stack, resid)
     return moments if stack.n_units == moments.shape[0] else moments[np.diff(stack.unit_ptr) > 0]
 
 
 def omega_of(stack: Stack, resid: FloatArray, *, center: bool) -> FloatArray:
     """Cluster covariance of the moments for the residuals ``resid``."""
+    # Stata: xdpt2_build_cluster_omega (xtdpthresh.ado:4001-4011)
     return cluster_omega(moments_by_unit(stack, resid), stack.n_rows, stack.n_units, center)
 
 

@@ -47,6 +47,10 @@ from pyxtdpthresh.models.xtdpthresh.variance import MIN_Q_VALUES, VarianceFit, f
 
 #: Projected number of instrument columns above which a note, and then a warning, is issued.
 NOTE_COLUMNS, WARN_COLUMNS = 300, 1500
+#: Projected peak memory (gigabytes) above which a note, and then a warning, is issued.
+NOTE_GB, WARN_GB = 2.0, 8.0
+#: Copies of the raw instrument matrix alive at the peak of the construction (measured: 3.0).
+Z_COPIES = 3.0
 
 
 @dataclass(frozen=True)
@@ -271,6 +275,31 @@ def projected_columns(data: XtdpthreshData) -> int:
     return n_periods * per_period + external
 
 
+def projected_memory(data: XtdpthreshData) -> float:
+    """Peak memory in bytes the fit is expected to need, from the size of the instrument matrix.
+
+    The peak comes from building the stack: the raw instrument matrix ``(equations, columns)``,
+    before the useless columns are removed, exists in about three copies at once.  With the
+    bootstrap, the weights and the moments of the draws add ``3 * units * n_boot`` numbers.
+    """
+    opts = data.spec.options
+    equations = int(np.count_nonzero(data.eq))
+    columns = projected_columns(data)
+    total = Z_COPIES * equations * columns * 8.0
+    if opts.bootstrap:
+        total += 3.0 * data.n_units * opts.n_boot * 8.0
+    return total
+
+
+def _warn_memory(data: XtdpthreshData) -> None:
+    """Warn before a fit whose projected memory is large."""
+    gigabytes = projected_memory(data) / 1e9
+    if gigabytes > WARN_GB:
+        _warn("warn_memory_high", gb=f"{gigabytes:.1f}")
+    elif gigabytes > NOTE_GB:
+        _warn("warn_memory", gb=f"{gigabytes:.1f}")
+
+
 def _warn_instruments(data: XtdpthreshData) -> None:
     if data.spec.options.collapse:
         return
@@ -300,6 +329,7 @@ def _fit_point(
     opts = spec.options
     if opts.warn:
         _warn_instruments(data)
+        _warn_memory(data)
     stack = build_stack(data)
     result = search_threshold(
         stack,

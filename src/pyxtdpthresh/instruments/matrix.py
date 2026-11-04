@@ -31,6 +31,7 @@ class InstrumentMatrix:
         cells = max(self.dense.size, 1)
         self._use_sparse = self.csr.nnz / cells < SPARSE_FILL
         self._csc: sparse.csc_matrix | None = None
+        self._csr64: tuple[IntArray, IntArray] | None = None
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -44,6 +45,13 @@ class InstrumentMatrix:
             self._csc = self.csr.tocsc()
             self._csc.sort_indices()
         return self._csc
+
+    @property
+    def csr64(self) -> tuple[IntArray, IntArray]:
+        """``indptr`` and ``indices`` of the compressed-row copy as ``int64`` (built once)."""
+        if self._csr64 is None:
+            self._csr64 = (self.csr.indptr.astype(np.int64), self.csr.indices.astype(np.int64))
+        return self._csr64
 
     def gram(self) -> FloatArray:
         """``Z'Z`` as a dense ``(k, k)`` matrix."""

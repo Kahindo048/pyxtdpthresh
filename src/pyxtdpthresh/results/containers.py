@@ -50,6 +50,13 @@ class XthenregFit:
         Kernel bandwidth of the covariance (NaN for a kink).
     static, kink
         Model variants.
+    names
+        Label of each entry of ``coef`` as Stata writes it (``Lag_y_b``, ``x_b``, ``cons_d``,
+        ``Lag_y_d``, ``x_d``, ``kink_slope``, ``r``); empty when the fit was built by hand.
+    y_name, q_name
+        Names of the dependent and threshold variables (empty when unknown).
+    seed
+        Seed of the bootstrap weights (given or drawn); ``None`` without bootstrap.
     """
 
     coef: FloatArray
@@ -70,6 +77,10 @@ class XthenregFit:
     bandwidth: float
     static: bool
     kink: bool
+    names: tuple[str, ...] = ()
+    y_name: str = ""
+    q_name: str = ""
+    seed: int | None = None
 
     def __post_init__(self) -> None:
         for f in fields(self):

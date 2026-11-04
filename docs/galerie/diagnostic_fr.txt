@@ -1,0 +1,29 @@
+== xtdpthresh FD ==
+Rapport de diagnostic : 0 alerte(s), 3 remarque(s)
+
+[remarque] L'ensemble de confiance du seuil atteint le bord inférieur des candidats : il est borné par la grille, non par les données.
+    Recommandation : Élargir la grille (réduire trim) avant de lire l'intervalle.
+[remarque] L'ensemble de confiance du seuil compte 5 intervalles séparés : les données soutiennent plusieurs seuils éloignés.
+    Recommandation : Donner les segments et pas seulement leur enveloppe, et regarder plot(fit, 'ci').
+[remarque] Un autre seuil, 0,3297, ajuste presque aussi bien que 0,2564 (critère à moins de 3,8) : l'estimation peut passer de l'un à l'autre selon la grille.
+    Recommandation : Raffiner la grille (grid=, refine=) et vérifier que les conclusions tiennent aux deux.
+
+== xtdpthresh FOD ==
+Rapport de diagnostic : 1 alerte(s), 2 remarque(s)
+
+[alerte] Le régime haut ne compte que 653 équations (9,6 %) issues de 214 unités.
+    Recommandation : Relever minregime ou déplacer la plage du seuil (trim) pour que chaque régime garde assez d'observations.
+[remarque] L'ensemble de confiance du seuil compte 6 intervalles séparés : les données soutiennent plusieurs seuils éloignés.
+    Recommandation : Donner les segments et pas seulement leur enveloppe, et regarder plot(fit, 'ci').
+[remarque] Un autre seuil, 0,2564, ajuste presque aussi bien que 0,4762 (critère à moins de 3,8) : l'estimation peut passer de l'un à l'autre selon la grille.
+    Recommandation : Raffiner la grille (grid=, refine=) et vérifier que les conclusions tiennent aux deux.
+
+== xtdpthresh kink ==
+Rapport de diagnostic : 1 alerte(s), 2 remarque(s)
+
+[alerte] Le test de Hansen rejette les restrictions de sur-identification (p = 0,000) : certains instruments peuvent être invalides ou le modèle mal spécifié.
+    Recommandation : Restreindre les retards des instruments (maxlag), ou ne traiter des variables suspectes comme exogènes ou prédéterminées que si l'économie le justifie.
+[remarque] L'ensemble de confiance du seuil atteint le bord supérieur des candidats : il est borné par la grille, non par les données.
+    Recommandation : Élargir la grille (réduire trim) avant de lire l'intervalle.
+[remarque] Le profil du critère est plat : 52 % des seuils sont à moins de 3,8 du minimum.
+    Recommandation : Le seuil estimé n'est pas nettement déterminé ; le comparer à l'ensemble de confiance et à plot(fit, 'profile').

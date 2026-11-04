@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,8 @@ name = "pyxtdpthresh"
 version = "0.0.1"
 description = "Dynamic panel threshold models in Python: ports of Stata's xthenreg and xtdpthresh, validated against Stata"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE", "NOTICE.md"]
 authors = [{ name = "Frederick Kahindo", email = "frederickahindo048@gmail.com" }]
 requires-python = ">=3.10"
 dependencies = [
@@ -22,7 +23,6 @@ keywords = ["econometrics", "panel-data", "threshold", "dynamic-panel", "gmm", "
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Programming Language :: Python :: 3",
@@ -49,6 +49,8 @@ dev = [
     "python-docx>=0.8",
     "openpyxl>=3.1",
     "joblib>=1.3",
+    "build>=1.2",
+    "twine>=5.0",
 ]
 
 [project.urls]
@@ -60,9 +62,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 pyxtdpthresh = ["py.typed", "extras/datasets/*.csv"]
-
-[tool.setuptools]
-license-files = []
 
 # ---------------------------------------------------------------- ruff
 [tool.ruff]
@@ -169,7 +168,7 @@ layers = [
     "pyxtdpthresh.data : pyxtdpthresh.transforms : pyxtdpthresh.instruments",
     "pyxtdpthresh.core",
     "pyxtdpthresh.kernels",
-    "pyxtdpthresh.results.containers : pyxtdpthresh.results.labels : pyxtdpthresh._config : pyxtdpthresh._errors : pyxtdpthresh._i18n : pyxtdpthresh._i18n_spec : pyxtdpthresh._types",
+    "pyxtdpthresh.results.containers : pyxtdpthresh.results.labels : pyxtdpthresh._config : pyxtdpthresh._errors : pyxtdpthresh._i18n : pyxtdpthresh._i18n_spec : pyxtdpthresh._types : pyxtdpthresh._version",
 ]
 
 [[tool.importlinter.contracts]]
@@ -206,3 +205,5 @@ source_modules = [
     "pyxtdpthresh.results.labels",
 ]
 forbidden_modules = ["matplotlib", "docx", "openpyxl"]
+# only a direct import is forbidden: api and results.public reach them through extras
+allow_indirect_imports = true

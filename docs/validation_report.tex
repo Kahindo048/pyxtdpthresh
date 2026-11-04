@@ -1,0 +1,1037 @@
+\documentclass[10.5pt,a4paper]{article}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{fontspec}
+\setmainfont{Latin Modern Roman}
+\setmonofont{Latin Modern Mono}[Scale=0.92]
+\usepackage{amsmath}
+\usepackage{booktabs,longtable,array}
+\usepackage{etoolbox}
+\AtBeginEnvironment{longtable}{\footnotesize}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue]{hyperref}
+\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small pyxtdpthresh validation report}
+\fancyfoot[C]{\small\thepage}
+\setlength{\emergencystretch}{3em}
+\renewcommand{\arraystretch}{1.12}
+\setlength{\tabcolsep}{4pt}
+\newcommand{\code}[1]{\texttt{#1}}
+
+
+\title{\textbf{pyxtdpthresh 0.0.1: validation against Stata 17}\\[2pt]\large Largest deviation by block, by case and by object}
+
+\author{}
+
+\date{03 November 2026}
+
+\begin{document}\maketitle
+
+\section{Rule and method}
+
+Every number the package reports must equal the one computed by Stata 17 to four
+decimals: the absolute difference is at most $5e-05$ \emph{or} the relative difference is at
+most $1e-06$ (the relative branch keeps the rule meaningful for large values such as the
+objective function). The \emph{margin} of a value is $\min(|\Delta|/5e-05,\;
+(|\Delta|/|x|)/1e-06)$; it is at most $1$ when the value agrees, and the tables report the
+largest margin of each block.
+
+The references are produced by the real commands (xthenreg (Seo, Kim and Kim 2019) and xtdpthresh 0.9.38) run in batch with Stata 17.0 MP;
+each object is exported at 15 significant digits and frozen in \code{tests/golden/}. The test
+suite compares the package with the frozen values, and the deviations in this report are recorded
+by those very comparisons (4\textbackslash{},764 comparisons of matrices or numbers in the golden tests, plus the
+objects of the help-file examples). The random numbers of Stata are reproduced exactly, so the
+seeded bootstraps draw the weights of the command and their $p$-values and confidence sets are
+compared directly.
+
+\section{Summary by block}
+
+\begin{longtable}{@{}p{7.4cm}rrrrr@{}}
+\toprule
+Block & Cases & Objects & Values & Largest $|\Delta|$ & Margin \\
+\midrule
+\endhead
+Random numbers (Stata's Mersenne Twister) & 5 & 1 & 10\,500 & $1.3\times10^{-15}$ & 2.7e-11 \\
+Matrix routines (invsym\, cholinv\, syminv) & 22 & 5 & 1\,210 & $4.6\times10^{5}$ & 0.097 \\
+Quantiles and threshold grids & 5 & 9 & 1\,930 & $3.7\times10^{-13}$ & 3.7e-09 \\
+Data layer: xtset\, lags\, missing values & 3 & 2 & 113\,223 & 0 & 0 \\
+Time-series operators & 19 & 19 & 4\,838 & $5.6\times10^{-17}$ & 1.1e-12 \\
+xthenreg: data and instruments & 12 & 14 & 44\,849 & $2.3\times10^{-13}$ & 5.1e-10 \\
+xthenreg: sup-Wald statistic and linearity test & 10 & 4 & 2\,309 & $6.3\times10^{-5}$ & 0.00019 \\
+xthenreg: covariance and confidence intervals & 24 & 4 & 2\,324 & $1.4\times10^{-12}$ & 2.8e-08 \\
+xthenreg: complete result & 32 & 6 & 2\,916 & $4.1\times10^{-11}$ & 8.1e-07 \\
+xthenreg: bandwidth multiplier h\_0() through the public function & 2 & 3 & 260 & $3.7\times10^{-13}$ & 7.3e-09 \\
+xtdpthresh: instruments and fixed-threshold GMM & 28 & 1 & 962\,700 & $5.1\times10^{-15}$ & 1e-10 \\
+xtdpthresh: threshold search and final estimate & 29 & 6 & 1\,537 & $9.5\times10^{-10}$ & 1.6e-06 \\
+xtdpthresh: point estimates on the full panel & 14 & 4 & 1\,064 & $1.1\times10^{-9}$ & 2.1e-05 \\
+xtdpthresh: deviations\, time effects\, unbalanced panels\, history & 41 & 7 & 1\,508\,791 & $7.6\times10^{-9}$ & 0.00011 \\
+xtdpthresh: variances and diagnostics & 45 & 32 & 7\,244 & $1.1\times10^{-9}$ & 2.1e-05 \\
+xtdpthresh: predict & 12 & 6 & 66\,718 & $3.3\times10^{-13}$ & 6.6e-09 \\
+xtdpthresh: bootstraps\, confidence set\, tests & 56 & 29 & 14\,538 & $8.9\times10^{-8}$ & 8.2e-05 \\
+xtdpthresh: unbalanced panel of the help file (no bootstrap) & 2 & 4 & 184 & $6.6\times10^{-14}$ & 1.3e-09 \\
+xtdpthresh: hostile inputs & 4 & 1 & 24 & $5.9\times10^{-8}$ & 0.0012 \\
+Simulated panels of the Seo-Shin design & 4 & 1 & 20 & $4.5\times10^{-9}$ & 8.9e-05 \\
+xtdpthresh: the examples of the help file (default options) & 8 & 72 & 503 & $2.1\times10^{-7}$ & 0.0014 \\
+\midrule
+\textbf{All blocks} & \textbf{377} & & \textbf{2\,747\,682} & \textbf{$4.6\times10^{5}$} & \textbf{0.097} \\
+\bottomrule
+\end{longtable}
+
+\noindent \emph{Cases} are the distinct designs or samples of a block; \emph{Objects} are the
+distinct names compared (for example \code{e(b)}); \emph{Values} counts every number compared, a
+matrix counting for all its elements. The absolute deviation is large only where the values
+are (the matrix routines are tested on very large and very small matrices); the margin says
+whether the rule holds. Integer results (counts of equations, instruments, return
+codes of the refusals, sets of rows) are compared for exact equality and are not listed in the
+deviations: the tests fail on the first difference.
+
+\section{The examples of the help file}
+
+The eight commands of the help file of \code{xtdpthresh} were run as printed, with the default options of Stata
+(\code{boot(299)}, \code{gridci(100)}, \code{grid(100)}), on Hansen's investment panel without the five extreme firms.
+The tables of the values, Python against Stata, are in \code{docs/help\_examples.md}; the largest deviation of each
+kind of object is below.
+
+\begin{longtable}{@{}p{7.2cm}p{2.8cm}rr@{}}
+\toprule
+Example & Objects & Compared & Largest $|\Delta|$ \\
+\midrule
+\endhead
+Point estimates and diagnostics & coefficient & 9 & $1.3\times10^{-14}$ \\
+ & std. error & 9 & $1.2\times10^{-14}$ \\
+ & scalar & 30 & $9.2\times10^{-14}$ \\
+ & matrix & 5 & $1.6\times10^{-14}$ \\
+\addlinespace
+Full inference and the test of Hansen's threshold & coefficient & 9 & $1.3\times10^{-14}$ \\
+ & std. error & 9 & $1.2\times10^{-14}$ \\
+ & scalar & 45 & $2.3\times10^{-11}$ \\
+ & matrix & 7 & $4.9\times10^{-9}$ \\
+\addlinespace
+Instruments from lag 2 & coefficient & 9 & $1.8\times10^{-9}$ \\
+ & std. error & 9 & $5.9\times10^{-9}$ \\
+ & scalar & 45 & $1.0\times10^{-9}$ \\
+ & matrix & 7 & $2.1\times10^{-7}$ \\
+\addlinespace
+Kink model & coefficient & 5 & $3.0\times10^{-12}$ \\
+ & std. error & 5 & $8.0\times10^{-11}$ \\
+ & scalar & 45 & $2.7\times10^{-12}$ \\
+ & matrix & 7 & $6.4\times10^{-10}$ \\
+\addlinespace
+Unbalanced panel, first differences & coefficient & 9 & $3.3\times10^{-14}$ \\
+ & std. error & 9 & $6.7\times10^{-13}$ \\
+ & scalar & 45 & $1.6\times10^{-13}$ \\
+ & matrix & 7 & $3.3\times10^{-10}$ \\
+\addlinespace
+Unbalanced panel, forward orthogonal deviations & coefficient & 9 & $3.8\times10^{-10}$ \\
+ & std. error & 9 & $7.5\times10^{-10}$ \\
+ & scalar & 45 & $9.2\times10^{-11}$ \\
+ & matrix & 7 & $1.7\times10^{-8}$ \\
+\addlinespace
+External instrument & coefficient & 9 & $1.2\times10^{-9}$ \\
+ & std. error & 9 & $3.1\times10^{-9}$ \\
+ & scalar & 30 & $1.7\times10^{-9}$ \\
+ & matrix & 5 & $1.0\times10^{-7}$ \\
+\addlinespace
+Postestimation: residuals and regime & coefficient & 9 & $1.3\times10^{-14}$ \\
+ & std. error & 9 & $1.2\times10^{-14}$ \\
+ & scalar & 30 & $9.2\times10^{-14}$ \\
+ & matrix & 5 & $1.6\times10^{-14}$ \\
+ & predict & 2 & $2.7\times10^{-14}$ \\
+\addlinespace
+\bottomrule
+\end{longtable}
+
+\section{Largest deviation by object}
+
+The objects are named as the tests name them (\code{e(b)}, \code{e(V)}, \code{e(ci\_grid)}\ldots). A block appears here when it compares several named objects over several cases; the other blocks compare one kind of value, or one object per case, and are described by the table of their cases in the next section.
+
+\subsection*{Matrix routines (invsym, cholinv, syminv)}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{cholinv} & 14 & 384 & $4.6\times10^{5}$ \\
+\texttt{invsym} & 21 & 439 & $1.2\times10^{-1}$ \\
+\texttt{psd} & 22 & 22 & 0 \\
+\texttt{syminv} & 13 & 343 & $4.6\times10^{5}$ \\
+\texttt{syminv\_\allowbreak{}ok} & 22 & 22 & 0 \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Quantiles and threshold grids}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{adm} & 5 & 500 & 0 \\
+\texttt{minreg} & 5 & 10 & 0 \\
+\texttt{mm} & 5 & 140 & $4.6\times10^{-14}$ \\
+\texttt{qgrid} & 5 & 130 & $7.8\times10^{-14}$ \\
+\texttt{qgrid1} & 5 & 5 & $1.8\times10^{-15}$ \\
+\texttt{rangen} & 5 & 500 & $5.0\times10^{-14}$ \\
+\texttt{rangen1} & 5 & 5 & $1.8\times10^{-15}$ \\
+\texttt{rangen\_\allowbreak{}x} & 5 & 500 & $5.7\times10^{-14}$ \\
+\texttt{t7} & 5 & 140 & $3.7\times10^{-13}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Data layer: xtset, lags, missing values}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{balance} & 3 & 3 & 0 \\
+\texttt{rows} & 3 & 113\,220 & 0 \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xthenreg: data and instruments}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{Z.bilinear} & 12 & 12 & $1.1\times10^{-13}$ \\
+\texttt{Z.cols} & 12 & 6\,668 & $2.3\times10^{-13}$ \\
+\texttt{Z.rows} & 12 & 1\,140 & $1.1\times10^{-13}$ \\
+\texttt{moment} & 12 & 453 & 0 \\
+\texttt{q.bilinear} & 12 & 12 & 0 \\
+\texttt{q.cols} & 12 & 105 & 0 \\
+\texttt{q.rows} & 12 & 6\,668 & 0 \\
+\texttt{scal} & 12 & 60 & 0 \\
+\texttt{x.bilinear} & 12 & 12 & 0 \\
+\texttt{x.cols} & 12 & 105 & 0 \\
+\texttt{x.rows} & 12 & 22\,829 & 0 \\
+\texttt{y.bilinear} & 12 & 12 & 0 \\
+\texttt{y.cols} & 12 & 105 & 0 \\
+\texttt{y.rows} & 12 & 6\,668 & 0 \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xthenreg: sup-Wald statistic and linearity test}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{boot\_\allowbreak{}sup} & 9 & 360 & $6.3\times10^{-5}$ \\
+\texttt{cov\_\allowbreak{}wald} & 9 & 1\,900 & $1.4\times10^{-6}$ \\
+\texttt{sup\_\allowbreak{}wald} & 9 & 9 & $3.5\times10^{-5}$ \\
+\texttt{value} & 1 & 40 & $2.8\times10^{-14}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xthenreg: covariance and confidence intervals}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{CI} & 16 & 272 & $1.4\times10^{-12}$ \\
+\texttt{V} & 16 & 1\,232 & $1.6\times10^{-13}$ \\
+\texttt{b} & 16 & 136 & $8.8\times10^{-13}$ \\
+\texttt{value} & 8 & 684 & $6.9\times10^{-18}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xthenreg: complete result}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{CI} & 32 & 518 & $2.4\times10^{-11}$ \\
+\texttt{N} & 32 & 36 & 0 \\
+\texttt{T} & 32 & 36 & 0 \\
+\texttt{V} & 32 & 2\,031 & $4.1\times10^{-11}$ \\
+\texttt{b} & 32 & 259 & $6.4\times10^{-12}$ \\
+\texttt{boots\_\allowbreak{}p} & 32 & 36 & 0 \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xthenreg: bandwidth multiplier h\_0() through the public function}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{CI} & 2 & 40 & $3.7\times10^{-13}$ \\
+\texttt{V} & 2 & 200 & $5.1\times10^{-14}$ \\
+\texttt{b} & 2 & 20 & $1.7\times10^{-13}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: threshold search and final estimate}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{e(V\_\allowbreak{}cond)} & 29 & 1\,208 & $5.2\times10^{-13}$ \\
+\texttt{e(b)} & 29 & 184 & $1.7\times10^{-12}$ \\
+\texttt{e(obj)} & 29 & 29 & $9.5\times10^{-10}$ \\
+\texttt{first-stage threshold} & 29 & 29 & $3.3\times10^{-16}$ \\
+\texttt{gamma} & 29 & 29 & $5.0\times10^{-16}$ \\
+\texttt{q bounds} & 29 & 58 & $2.2\times10^{-16}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: point estimates on the full panel}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{e(V\_\allowbreak{}cond)} & 14 & 925 & $1.6\times10^{-12}$ \\
+\texttt{e(b)} & 14 & 111 & $2.5\times10^{-12}$ \\
+\texttt{e(gamma)} & 14 & 14 & $5.0\times10^{-16}$ \\
+\texttt{e(obj)} & 14 & 14 & $1.1\times10^{-9}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: deviations, time effects, unbalanced panels, history}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{X at the threshold} & 41 & 160\,566 & $2.5\times10^{-14}$ \\
+\texttt{e(V\_\allowbreak{}cond)} & 41 & 1\,855 & $1.6\times10^{-10}$ \\
+\texttt{e(b)} & 41 & 546 & $1.9\times10^{-10}$ \\
+\texttt{e(obj)} & 41 & 82 & $7.6\times10^{-9}$ \\
+\texttt{first-stage threshold} & 41 & 41 & $4.4\times10^{-16}$ \\
+\texttt{gamma} & 41 & 41 & $4.9\times10^{-16}$ \\
+\texttt{value} & 41 & 1\,345\,660 & $1.5\times10^{-13}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: variances and diagnostics}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{e(N)} & 45 & 45 & 0 \\
+\texttt{e(N\_\allowbreak{}clust)} & 45 & 45 & 0 \\
+\texttt{e(N\_\allowbreak{}switch)} & 45 & 45 & 0 \\
+\texttt{e(N\_\allowbreak{}units)} & 45 & 45 & 0 \\
+\texttt{e(V)} & 45 & 2\,217 & $8.2\times10^{-10}$ \\
+\texttt{e(V\_\allowbreak{}cond)} & 45 & 2\,217 & $2.4\times10^{-10}$ \\
+\texttt{e(V\_\allowbreak{}upper)} & 41 & 393 & $2.7\times10^{-12}$ \\
+\texttt{e(ar1)} & 45 & 90 & $4.1\times10^{-11}$ \\
+\texttt{e(ar1\_\allowbreak{}T1)} & 45 & 90 & $1.9\times10^{-10}$ \\
+\texttt{e(ar1\_\allowbreak{}TT)} & 45 & 90 & $1.4\times10^{-10}$ \\
+\texttt{e(ar1\_\allowbreak{}b0)} & 45 & 90 & $2.2\times10^{-11}$ \\
+\texttt{e(ar1\_\allowbreak{}cond)} & 45 & 90 & $1.6\times10^{-11}$ \\
+\texttt{e(ar1\_\allowbreak{}p)} & 45 & 90 & $2.8\times10^{-13}$ \\
+\texttt{e(ar2)} & 45 & 90 & $1.6\times10^{-11}$ \\
+\texttt{e(ar2\_\allowbreak{}T1)} & 45 & 90 & $9.1\times10^{-12}$ \\
+\texttt{e(ar2\_\allowbreak{}TT)} & 45 & 90 & $1.5\times10^{-11}$ \\
+\texttt{e(ar2\_\allowbreak{}b0)} & 45 & 90 & $2.9\times10^{-12}$ \\
+\texttt{e(ar2\_\allowbreak{}cond)} & 45 & 90 & $1.1\times10^{-11}$ \\
+\texttt{e(ar2\_\allowbreak{}p)} & 45 & 90 & $1.2\times10^{-11}$ \\
+\texttt{e(ar\_\allowbreak{}joint)} & 45 & 45 & 0 \\
+\texttt{e(b)} & 45 & 309 & $2.9\times10^{-11}$ \\
+\texttt{e(b\_\allowbreak{}upper)} & 41 & 123 & $2.7\times10^{-12}$ \\
+\texttt{e(estimator\_\allowbreak{}twostep)} & 45 & 45 & 0 \\
+\texttt{e(gamma)} & 45 & 90 & $4.4\times10^{-16}$ \\
+\texttt{e(gamma\_\allowbreak{}bw)} & 38 & 76 & $5.1\times10^{-16}$ \\
+\texttt{e(hansen)} & 43 & 86 & $1.1\times10^{-9}$ \\
+\texttt{e(hansen\_\allowbreak{}df)} & 43 & 86 & 0 \\
+\texttt{e(hansen\_\allowbreak{}p)} & 43 & 86 & $5.7\times10^{-11}$ \\
+\texttt{e(joint\_\allowbreak{}vce)} & 45 & 45 & 0 \\
+\texttt{e(obj)} & 45 & 45 & $1.1\times10^{-9}$ \\
+\texttt{e(q\_\allowbreak{}nvals\_\allowbreak{}bw)} & 38 & 76 & 0 \\
+\texttt{e(vce\_\allowbreak{}applied)} & 45 & 45 & 0 \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: predict}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{predict ar\_\allowbreak{}residuals} & 11 & 13\,098 & $3.3\times10^{-13}$ \\
+\texttt{predict regime} & 11 & 16\,973 & 0 \\
+\texttt{predict residuals} & 11 & 13\,144 & $3.3\times10^{-13}$ \\
+\texttt{predict residuals if} & 11 & 9\,659 & $3.2\times10^{-13}$ \\
+\texttt{predict xb} & 11 & 13\,144 & $3.3\times10^{-13}$ \\
+\texttt{xb + residuals} & 1 & 700 & $6.9\times10^{-18}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: bootstraps, confidence set, tests}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{boot\_\allowbreak{}linearity\_\allowbreak{}valid} & 55 & 55 & 0 \\
+\texttt{continuity valid} & 9 & 9 & 0 \\
+\texttt{e(b\_\allowbreak{}bootci)} & 10 & 134 & $7.8\times10^{-13}$ \\
+\texttt{e(boot\_\allowbreak{}coef\_\allowbreak{}B)} & 10 & 10 & 0 \\
+\texttt{e(boot\_\allowbreak{}coef\_\allowbreak{}attempted)} & 10 & 10 & 0 \\
+\texttt{e(boot\_\allowbreak{}coef\_\allowbreak{}failed)} & 10 & 10 & 0 \\
+\texttt{e(boot\_\allowbreak{}coef\_\allowbreak{}twostep)} & 10 & 10 & 0 \\
+\texttt{e(boot\_\allowbreak{}grid\_\allowbreak{}stage1)} & 10 & 10 & 0 \\
+\texttt{e(boot\_\allowbreak{}grid\_\allowbreak{}stage2)} & 10 & 10 & 0 \\
+\texttt{e(boundary\_\allowbreak{}warn)} & 56 & 56 & 0 \\
+\texttt{e(ci\_\allowbreak{}empty)} & 52 & 104 & 0 \\
+\texttt{e(ci\_\allowbreak{}grid)} & 56 & 13\,002 & $8.9\times10^{-8}$ \\
+\texttt{e(ci\_\allowbreak{}incomplete)} & 56 & 112 & 0 \\
+\texttt{e(ci\_\allowbreak{}nseg)} & 52 & 104 & 0 \\
+\texttt{e(ci\_\allowbreak{}segments)} & 52 & 348 & $5.0\times10^{-16}$ \\
+\texttt{e(ci\_\allowbreak{}unresolved)} & 56 & 56 & 0 \\
+\texttt{e(citest\_\allowbreak{}D)} & 8 & 8 & $2.0\times10^{-9}$ \\
+\texttt{e(citest\_\allowbreak{}accept)} & 8 & 8 & 0 \\
+\texttt{e(citest\_\allowbreak{}crit)} & 8 & 8 & $5.0\times10^{-9}$ \\
+\texttt{e(citest\_\allowbreak{}draws)} & 9 & 9 & 0 \\
+\texttt{e(citest\_\allowbreak{}gamma)} & 9 & 9 & 0 \\
+\texttt{e(citest\_\allowbreak{}p)} & 8 & 8 & 0 \\
+\texttt{e(citest\_\allowbreak{}status)} & 9 & 9 & 0 \\
+\texttt{e(gamma)} & 56 & 56 & $4.4\times10^{-16}$ \\
+\texttt{e(gamma\_\allowbreak{}hi)} & 52 & 104 & $5.0\times10^{-16}$ \\
+\texttt{e(gamma\_\allowbreak{}lo)} & 52 & 104 & $2.8\times10^{-16}$ \\
+\texttt{e(pval\_\allowbreak{}cont)} & 9 & 9 & 0 \\
+\texttt{e(pval\_\allowbreak{}lin)} & 55 & 110 & 0 \\
+\texttt{e(rseed)} & 56 & 56 & 0 \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: unbalanced panel of the help file (no bootstrap)}
+
+\begin{longtable}{@{}p{8.2cm}rrr@{}}
+\toprule
+Object & Cases & Values & Largest $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{e(V\_\allowbreak{}cond)} & 2 & 162 & $1.9\times10^{-15}$ \\
+\texttt{e(b)} & 2 & 18 & $6.7\times10^{-15}$ \\
+\texttt{e(gamma)} & 2 & 2 & $3.9\times10^{-16}$ \\
+\texttt{e(obj)} & 2 & 2 & $6.6\times10^{-14}$ \\
+\bottomrule
+\end{longtable}
+
+\section{Largest deviation by case}
+
+\subsection*{Random numbers (Stata's Mersenne Twister)}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{0} & 1 & 2\,100 & \texttt{value} & $1.3\times10^{-15}$ \\
+\texttt{1} & 1 & 2\,100 & \texttt{value} & $1.3\times10^{-15}$ \\
+\texttt{123} & 1 & 2\,100 & \texttt{value} & $1.3\times10^{-15}$ \\
+\texttt{12345} & 1 & 2\,100 & \texttt{value} & $1.3\times10^{-15}$ \\
+\texttt{2147483647} & 1 & 2\,100 & \texttt{value} & $1.1\times10^{-15}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Matrix routines (invsym, cholinv, syminv)}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{asym} & 5 & 29 & \texttt{syminv} & $4.4\times10^{-15}$ \\
+\texttt{cond10} & 4 & 52 & \texttt{cholinv} & $4.6\times10^{2}$ \\
+\texttt{cond11} & 4 & 52 & \texttt{cholinv} & $2.8\times10^{3}$ \\
+\texttt{cond6} & 5 & 77 & \texttt{syminv} & $6.9\times10^{-6}$ \\
+\texttt{cond8} & 5 & 77 & \texttt{cholinv} & $3.3\times10^{-2}$ \\
+\texttt{diag\_\allowbreak{}wide} & 5 & 14 & \texttt{invsym} & 0 \\
+\texttt{diag\_\allowbreak{}zero} & 3 & 11 & \texttt{invsym} & 0 \\
+\texttt{gram} & 5 & 77 & \texttt{invsym} & $4.3\times10^{-17}$ \\
+\texttt{gram\_\allowbreak{}sing} & 3 & 18 & \texttt{invsym} & $2.8\times10^{-17}$ \\
+\texttt{huge} & 5 & 50 & \texttt{syminv} & $4.0\times10^{-27}$ \\
+\texttt{indef} & 3 & 6 & \texttt{invsym} & 0 \\
+\texttt{indef3} & 3 & 11 & \texttt{invsym} & $3.3\times10^{-16}$ \\
+\texttt{mixed} & 4 & 20 & \texttt{syminv} & $1.6\times10^{1}$ \\
+\texttt{nan} & 2 & 2 & \texttt{syminv\_\allowbreak{}ok} & 0 \\
+\texttt{negdef} & 3 & 6 & \texttt{invsym} & 0 \\
+\texttt{ones} & 3 & 6 & \texttt{invsym} & 0 \\
+\texttt{spd1} & 5 & 5 & \texttt{invsym} & $4.4\times10^{-16}$ \\
+\texttt{spd12} & 5 & 434 & \texttt{invsym} & $3.9\times10^{-14}$ \\
+\texttt{spd2} & 5 & 14 & \texttt{invsym} & $3.1\times10^{-15}$ \\
+\texttt{spd4} & 5 & 50 & \texttt{syminv} & $5.1\times10^{-15}$ \\
+\texttt{spd7} & 5 & 149 & \texttt{invsym} & $7.7\times10^{-12}$ \\
+\texttt{tiny} & 5 & 50 & \texttt{cholinv} & $4.6\times10^{5}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Quantiles and threshold grids}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{n300} & 9 & 390 & \texttt{qgrid} & $7.8\times10^{-14}$ \\
+\texttt{skew1000} & 9 & 388 & \texttt{rangen\_\allowbreak{}x} & $5.3\times10^{-14}$ \\
+\texttt{small25} & 9 & 392 & \texttt{rangen} & $7.1\times10^{-15}$ \\
+\texttt{ties10} & 9 & 370 & \texttt{rangen} & $6.2\times10^{-15}$ \\
+\texttt{uni4520} & 9 & 390 & \texttt{t7} & $3.7\times10^{-13}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Data layer: xtset, lags, missing values}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{full} & 2 & 40\,681 & \texttt{balance} & 0 \\
+\texttt{unbal} & 2 & 35\,593 & \texttt{balance} & 0 \\
+\texttt{weak} & 2 & 36\,949 & \texttt{balance} & 0 \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Time-series operators}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{D.cashflow} & 1 & 300 & \texttt{D.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{D2.cashflow} & 1 & 222 & \texttt{D2.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{DF.cashflow} & 1 & 300 & \texttt{DF.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{DL.cashflow} & 1 & 222 & \texttt{DL.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{F.cashflow} & 1 & 300 & \texttt{F.cashflow} & 0 \\
+\texttt{F2.cashflow} & 1 & 278 & \texttt{F2.cashflow} & 0 \\
+\texttt{FD.cashflow} & 1 & 300 & \texttt{FD.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{L.D2.cashflow} & 1 & 153 & \texttt{L.D2.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{L.cashflow} & 1 & 300 & \texttt{L.cashflow} & 0 \\
+\texttt{L2.cashflow} & 1 & 278 & \texttt{L2.cashflow} & 0 \\
+\texttt{L2D.cashflow} & 1 & 205 & \texttt{L2D.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{L3.cashflow} & 1 & 257 & \texttt{L3.cashflow} & 0 \\
+\texttt{LD.cashflow} & 1 & 222 & \texttt{LD.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{LF.cashflow} & 1 & 386 & \texttt{LF.cashflow} & 0 \\
+\texttt{LS2.cashflow} & 1 & 205 & \texttt{LS2.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{S2.cashflow} & 1 & 278 & \texttt{S2.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{S2D.cashflow} & 1 & 153 & \texttt{S2D.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{S3.cashflow} & 1 & 257 & \texttt{S3.cashflow} & $5.6\times10^{-17}$ \\
+\texttt{SS.cashflow} & 1 & 222 & \texttt{SS.cashflow} & $5.6\times10^{-17}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xthenreg: data and instruments}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{c1} & 14 & 4\,113 & \texttt{scal} & 0 \\
+\texttt{c2} & 14 & 4\,113 & \texttt{scal} & 0 \\
+\texttt{c3} & 14 & 4\,093 & \texttt{Z.cols} & $1.4\times10^{-14}$ \\
+\texttt{c4} & 14 & 4\,124 & \texttt{Z.cols} & $2.3\times10^{-13}$ \\
+\texttt{c5} & 14 & 3\,486 & \texttt{Z.cols} & $1.4\times10^{-14}$ \\
+\texttt{c6} & 14 & 4\,110 & \texttt{Z.cols} & $7.1\times10^{-15}$ \\
+\texttt{f1} & 14 & 3\,708 & \texttt{Z.cols} & $2.8\times10^{-14}$ \\
+\texttt{f2} & 14 & 3\,866 & \texttt{Z.cols} & $1.7\times10^{-13}$ \\
+\texttt{m1} & 14 & 3\,169 & \texttt{Z.cols} & $7.1\times10^{-15}$ \\
+\texttt{m2} & 14 & 3\,150 & \texttt{Z.cols} & $7.1\times10^{-15}$ \\
+\texttt{w1} & 14 & 3\,465 & \texttt{Z.cols} & $2.8\times10^{-14}$ \\
+\texttt{w2} & 14 & 3\,452 & \texttt{Z.cols} & $1.1\times10^{-13}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xthenreg: sup-Wald statistic and linearity test}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{injected\_\allowbreak{}draws\_\allowbreak{}reproduce\_\allowbreak{}the\_\allowbreak{}same\_\allowbreak{}statistic\_\allowbreak{}as\_\allowbreak{}the\_\allowbreak{}generator} & 1 & 40 & \texttt{value} & $2.8\times10^{-14}$ \\
+\texttt{l1} & 3 & 541 & \texttt{cov\_\allowbreak{}wald} & $1.8\times10^{-9}$ \\
+\texttt{l2} & 3 & 121 & \texttt{sup\_\allowbreak{}wald} & $2.3\times10^{-7}$ \\
+\texttt{l3} & 3 & 361 & \texttt{cov\_\allowbreak{}wald} & $1.4\times10^{-6}$ \\
+\texttt{l4} & 3 & 121 & \texttt{sup\_\allowbreak{}wald} & $2.6\times10^{-11}$ \\
+\texttt{l5} & 3 & 541 & \texttt{cov\_\allowbreak{}wald} & $1.0\times10^{-9}$ \\
+\texttt{p1} & 3 & 121 & \texttt{boot\_\allowbreak{}sup} & $2.9\times10^{-12}$ \\
+\texttt{p2} & 3 & 221 & \texttt{boot\_\allowbreak{}sup} & $2.5\times10^{-12}$ \\
+\texttt{p3} & 3 & 121 & \texttt{boot\_\allowbreak{}sup} & $6.3\times10^{-5}$ \\
+\texttt{p4} & 3 & 121 & \texttt{sup\_\allowbreak{}wald} & $9.8\times10^{-8}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xthenreg: covariance and confidence intervals}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{c1} & 1 & 110 & \texttt{value} & $6.9\times10^{-18}$ \\
+\texttt{c1-fast} & 3 & 130 & \texttt{CI} & $3.1\times10^{-13}$ \\
+\texttt{c1-literal} & 3 & 130 & \texttt{CI} & $1.3\times10^{-13}$ \\
+\texttt{c2} & 1 & 42 & \texttt{value} & $2.7\times10^{-20}$ \\
+\texttt{c2-fast} & 3 & 54 & \texttt{CI} & $2.2\times10^{-14}$ \\
+\texttt{c2-literal} & 3 & 54 & \texttt{CI} & $1.6\times10^{-14}$ \\
+\texttt{c3} & 1 & 72 & \texttt{value} & $1.1\times10^{-19}$ \\
+\texttt{c3-fast} & 3 & 88 & \texttt{CI} & $1.4\times10^{-12}$ \\
+\texttt{c3-literal} & 3 & 88 & \texttt{CI} & $8.9\times10^{-13}$ \\
+\texttt{c4} & 1 & 110 & \texttt{value} & $4.3\times10^{-19}$ \\
+\texttt{c4-fast} & 3 & 130 & \texttt{CI} & $4.3\times10^{-14}$ \\
+\texttt{c4-literal} & 3 & 130 & \texttt{b} & $3.4\times10^{-14}$ \\
+\texttt{c5} & 1 & 20 & \texttt{value} & $2.2\times10^{-19}$ \\
+\texttt{c5-fast} & 3 & 28 & \texttt{CI} & $7.1\times10^{-15}$ \\
+\texttt{c5-literal} & 3 & 28 & \texttt{CI} & $5.2\times10^{-15}$ \\
+\texttt{c6} & 1 & 110 & \texttt{value} & $5.4\times10^{-20}$ \\
+\texttt{c6-fast} & 3 & 130 & \texttt{CI} & $5.9\times10^{-13}$ \\
+\texttt{c6-literal} & 3 & 130 & \texttt{CI} & $3.5\times10^{-13}$ \\
+\texttt{c7} & 1 & 110 & \texttt{value} & $6.9\times10^{-18}$ \\
+\texttt{c7-fast} & 3 & 130 & \texttt{CI} & $3.7\times10^{-13}$ \\
+\texttt{c7-literal} & 3 & 130 & \texttt{CI} & $1.6\times10^{-13}$ \\
+\texttt{c8} & 1 & 110 & \texttt{value} & $2.2\times10^{-19}$ \\
+\texttt{c8-fast} & 3 & 130 & \texttt{CI} & $4.3\times10^{-14}$ \\
+\texttt{c8-literal} & 3 & 130 & \texttt{CI} & $3.4\times10^{-14}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xthenreg: complete result}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{c1} & 6 & 266 & \texttt{CI} & $3.1\times10^{-13}$ \\
+\texttt{c2} & 6 & 114 & \texttt{CI} & $2.2\times10^{-14}$ \\
+\texttt{c3} & 6 & 182 & \texttt{CI} & $1.4\times10^{-12}$ \\
+\texttt{c4} & 6 & 133 & \texttt{CI} & $4.3\times10^{-14}$ \\
+\texttt{c5} & 6 & 62 & \texttt{CI} & $7.1\times10^{-15}$ \\
+\texttt{c6} & 6 & 133 & \texttt{CI} & $5.9\times10^{-13}$ \\
+\texttt{c7} & 6 & 133 & \texttt{CI} & $3.7\times10^{-13}$ \\
+\texttt{c8} & 6 & 133 & \texttt{CI} & $4.3\times10^{-14}$ \\
+\texttt{gb1} & 6 & 31 & \texttt{CI} & $1.1\times10^{-14}$ \\
+\texttt{gb2} & 6 & 57 & \texttt{CI} & $1.2\times10^{-14}$ \\
+\texttt{gb3} & 6 & 31 & \texttt{V} & $4.1\times10^{-11}$ \\
+\texttt{gb4} & 6 & 21 & \texttt{CI} & $8.7\times10^{-14}$ \\
+\texttt{gb5} & 6 & 31 & \texttt{V} & $2.7\times10^{-11}$ \\
+\texttt{gk1} & 6 & 43 & \texttt{CI} & $7.8\times10^{-15}$ \\
+\texttt{gk2} & 6 & 31 & \texttt{CI} & $4.9\times10^{-15}$ \\
+\texttt{gk3} & 6 & 43 & \texttt{CI} & $1.1\times10^{-14}$ \\
+\texttt{gt1} & 6 & 133 & \texttt{CI} & $6.7\times10^{-12}$ \\
+\texttt{gt2} & 6 & 57 & \texttt{CI} & $1.2\times10^{-12}$ \\
+\texttt{gt3} & 6 & 57 & \texttt{CI} & $5.7\times10^{-14}$ \\
+\texttt{gt4} & 6 & 133 & \texttt{CI} & $9.3\times10^{-13}$ \\
+\texttt{gv01} & 6 & 91 & \texttt{CI} & $1.2\times10^{-13}$ \\
+\texttt{gv02} & 6 & 91 & \texttt{CI} & $1.4\times10^{-14}$ \\
+\texttt{gv03} & 6 & 91 & \texttt{CI} & $1.9\times10^{-14}$ \\
+\texttt{gv04} & 6 & 91 & \texttt{CI} & $8.5\times10^{-14}$ \\
+\texttt{gv05} & 6 & 91 & \texttt{CI} & $2.8\times10^{-14}$ \\
+\texttt{gv06} & 6 & 91 & \texttt{CI} & $2.1\times10^{-14}$ \\
+\texttt{gv07} & 6 & 91 & \texttt{CI} & $1.4\times10^{-13}$ \\
+\texttt{gv08} & 6 & 91 & \texttt{CI} & $7.3\times10^{-15}$ \\
+\texttt{gv09} & 6 & 91 & \texttt{CI} & $2.6\times10^{-14}$ \\
+\texttt{gv10} & 6 & 91 & \texttt{CI} & $1.7\times10^{-13}$ \\
+\texttt{gv11} & 6 & 91 & \texttt{CI} & $2.1\times10^{-14}$ \\
+\texttt{gv12} & 6 & 91 & \texttt{CI} & $3.7\times10^{-14}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xthenreg: bandwidth multiplier h\_0() through the public function}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{c7} & 3 & 130 & \texttt{CI} & $3.7\times10^{-13}$ \\
+\texttt{c8} & 3 & 130 & \texttt{CI} & $4.3\times10^{-14}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: instruments and fixed-threshold GMM}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{collapse} & 1 & 11\,200 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{common\_\allowbreak{}variable} & 1 & 29\,400 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{common\_\allowbreak{}variable\_\allowbreak{}collapse} & 1 & 7\,000 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{dependent\_\allowbreak{}iv} & 1 & 49\,000 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{duplicate\_\allowbreak{}endog\_\allowbreak{}lag} & 1 & 49\,000 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{duplicate\_\allowbreak{}predetermined\_\allowbreak{}ylag} & 1 & 17\,500 & \texttt{value} & $1.7\times10^{-16}$ \\
+\texttt{endog} & 1 & 49\,000 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{endog\_\allowbreak{}predet} & 1 & 68\,600 & \texttt{value} & 0 \\
+\texttt{exog\_\allowbreak{}only} & 1 & 29\,400 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{exogenous\_\allowbreak{}option} & 1 & 34\,300 & \texttt{value} & $6.7\times10^{-16}$ \\
+\texttt{iv\_\allowbreak{}one} & 1 & 34\,300 & \texttt{value} & $4.4\times10^{-16}$ \\
+\texttt{iv\_\allowbreak{}two} & 1 & 58\,800 & \texttt{value} & $5.1\times10^{-15}$ \\
+\texttt{iv\_\allowbreak{}two\_\allowbreak{}collapse} & 1 & 50\,400 & \texttt{value} & $5.1\times10^{-15}$ \\
+\texttt{iv\_\allowbreak{}with\_\allowbreak{}collapse} & 1 & 7\,000 & \texttt{value} & $4.4\times10^{-16}$ \\
+\texttt{kink} & 1 & 49\,000 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{maxlag\_\allowbreak{}1\_\allowbreak{}2} & 1 & 24\,500 & \texttt{value} & 0 \\
+\texttt{maxlag\_\allowbreak{}2\_\allowbreak{}5} & 1 & 40\,600 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{maxlag\_\allowbreak{}4\_\allowbreak{}4} & 1 & 16\,800 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{maxlag\_\allowbreak{}collapse} & 1 & 7\,000 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{nocenter} & 1 & 49\,000 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{predet} & 1 & 53\,900 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{static} & 1 & 14\,700 & \texttt{value} & $8.9\times10^{-16}$ \\
+\texttt{static\_\allowbreak{}endog} & 1 & 35\,200 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{unbalanced\_\allowbreak{}alternate\_\allowbreak{}years} & 1 & 34\,300 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{unbalanced\_\allowbreak{}gaps} & 1 & 35\,560 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{unbalanced\_\allowbreak{}missing\_\allowbreak{}endog} & 1 & 42\,000 & \texttt{value} & $1.9\times10^{-16}$ \\
+\texttt{unbalanced\_\allowbreak{}missing\_\allowbreak{}x} & 1 & 26\,040 & \texttt{value} & $1.1\times10^{-16}$ \\
+\texttt{unbalanced\_\allowbreak{}short\_\allowbreak{}units} & 1 & 39\,200 & \texttt{value} & $1.9\times10^{-16}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: threshold search and final estimate}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{alternate\_\allowbreak{}years\_\allowbreak{}grid10} & 6 & 61 & \texttt{e(V\_\allowbreak{}cond)} & $3.4\times10^{-14}$ \\
+\texttt{alternate\_\allowbreak{}years\_\allowbreak{}kink} & 6 & 25 & \texttt{e(b)} & $3.8\times10^{-15}$ \\
+\texttt{collapse} & 6 & 61 & \texttt{e(V\_\allowbreak{}cond)} & $5.2\times10^{-13}$ \\
+\texttt{default} & 6 & 61 & \texttt{e(obj)} & $1.5\times10^{-11}$ \\
+\texttt{exog\_\allowbreak{}only} & 6 & 35 & \texttt{e(obj)} & $2.1\times10^{-12}$ \\
+\texttt{grid10} & 6 & 61 & \texttt{e(obj)} & $6.3\times10^{-11}$ \\
+\texttt{grid200} & 6 & 61 & \texttt{e(obj)} & $1.1\times10^{-10}$ \\
+\texttt{iv} & 6 & 61 & \texttt{e(obj)} & $4.0\times10^{-11}$ \\
+\texttt{kink} & 6 & 25 & \texttt{e(obj)} & $3.8\times10^{-10}$ \\
+\texttt{kink\_\allowbreak{}grid10} & 6 & 25 & \texttt{e(obj)} & $2.4\times10^{-10}$ \\
+\texttt{kink\_\allowbreak{}trim20} & 6 & 25 & \texttt{e(obj)} & $7.7\times10^{-12}$ \\
+\texttt{min\_\allowbreak{}regime} & 6 & 61 & \texttt{e(obj)} & $6.6\times10^{-11}$ \\
+\texttt{nocenter} & 6 & 61 & \texttt{e(obj)} & $8.7\times10^{-12}$ \\
+\texttt{observed\_\allowbreak{}support} & 6 & 61 & \texttt{e(obj)} & $4.2\times10^{-11}$ \\
+\texttt{quantile} & 6 & 61 & \texttt{e(obj)} & $1.0\times10^{-10}$ \\
+\texttt{quantile\_\allowbreak{}10} & 6 & 61 & \texttt{e(obj)} & $4.3\times10^{-11}$ \\
+\texttt{refine1} & 6 & 61 & \texttt{e(obj)} & $2.4\times10^{-12}$ \\
+\texttt{refine3} & 6 & 61 & \texttt{e(obj)} & $2.4\times10^{-12}$ \\
+\texttt{refine\_\allowbreak{}quantile} & 6 & 61 & \texttt{e(obj)} & $7.2\times10^{-11}$ \\
+\texttt{static} & 6 & 35 & \texttt{e(obj)} & $2.0\times10^{-13}$ \\
+\texttt{trim05} & 6 & 61 & \texttt{e(obj)} & $1.2\times10^{-10}$ \\
+\texttt{trim20} & 6 & 61 & \texttt{e(obj)} & $7.7\times10^{-11}$ \\
+\texttt{unbalanced\_\allowbreak{}alternate\_\allowbreak{}years} & 6 & 61 & \texttt{e(b)} & $1.9\times10^{-14}$ \\
+\texttt{unbalanced\_\allowbreak{}gaps} & 6 & 61 & \texttt{e(obj)} & $1.1\times10^{-11}$ \\
+\texttt{unbalanced\_\allowbreak{}kink} & 6 & 25 & \texttt{e(obj)} & $9.5\times10^{-10}$ \\
+\texttt{unbalanced\_\allowbreak{}missing\_\allowbreak{}endog} & 6 & 61 & \texttt{e(obj)} & $3.8\times10^{-11}$ \\
+\texttt{unbalanced\_\allowbreak{}missing\_\allowbreak{}x} & 6 & 61 & \texttt{e(obj)} & $1.6\times10^{-11}$ \\
+\texttt{unbalanced\_\allowbreak{}refine} & 6 & 61 & \texttt{e(obj)} & $1.8\times10^{-11}$ \\
+\texttt{unbalanced\_\allowbreak{}short\_\allowbreak{}units} & 6 & 61 & \texttt{e(obj)} & $4.7\times10^{-10}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: point estimates on the full panel}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{default\_\allowbreak{}instruments} & 4 & 58 & \texttt{e(obj)} & $1.6\times10^{-10}$ \\
+\texttt{help\_\allowbreak{}grid\_\allowbreak{}200} & 4 & 92 & \texttt{e(obj)} & $3.3\times10^{-13}$ \\
+\texttt{help\_\allowbreak{}iv\_\allowbreak{}peer} & 4 & 92 & \texttt{e(obj)} & $6.0\times10^{-13}$ \\
+\texttt{help\_\allowbreak{}kink} & 4 & 32 & \texttt{e(obj)} & $1.1\times10^{-12}$ \\
+\texttt{help\_\allowbreak{}maxlag\_\allowbreak{}2\_\allowbreak{}10} & 4 & 92 & \texttt{e(obj)} & $1.1\times10^{-9}$ \\
+\texttt{help\_\allowbreak{}maxlag\_\allowbreak{}3\_\allowbreak{}8} & 4 & 92 & \texttt{e(obj)} & $2.9\times10^{-13}$ \\
+\texttt{help\_\allowbreak{}quantile\_\allowbreak{}grid} & 4 & 92 & \texttt{e(obj)} & $1.4\times10^{-13}$ \\
+\texttt{help\_\allowbreak{}refine} & 4 & 92 & \texttt{e(obj)} & $2.7\times10^{-13}$ \\
+\texttt{help\_\allowbreak{}unbalanced\_\allowbreak{}alternate} & 4 & 92 & \texttt{e(obj)} & $1.1\times10^{-12}$ \\
+\texttt{help\_\allowbreak{}unbalanced\_\allowbreak{}gaps} & 4 & 92 & \texttt{e(obj)} & $1.8\times10^{-13}$ \\
+\texttt{help\_\allowbreak{}unbalanced\_\allowbreak{}short} & 4 & 92 & \texttt{e(obj)} & $7.3\times10^{-14}$ \\
+\texttt{kink\_\allowbreak{}default\_\allowbreak{}instruments} & 4 & 22 & \texttt{e(obj)} & $4.5\times10^{-10}$ \\
+\texttt{mixed\_\allowbreak{}roles} & 4 & 92 & \texttt{e(b)} & $1.9\times10^{-14}$ \\
+\texttt{static\_\allowbreak{}default} & 4 & 32 & \texttt{e(obj)} & $5.0\times10^{-13}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: deviations, time effects, unbalanced panels, history}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{fd\_\allowbreak{}age\_\allowbreak{}without\_\allowbreak{}td} & 7 & 55\,403 & \texttt{e(b)} & $1.9\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}history\_\allowbreak{}panel} & 7 & 33\,567 & \texttt{e(obj)} & $4.7\times10^{-12}$ \\
+\texttt{fd\_\allowbreak{}history\_\allowbreak{}sample} & 7 & 14\,067 & \texttt{e(obj)} & $3.6\times10^{-13}$ \\
+\texttt{fd\_\allowbreak{}iv\_\allowbreak{}with\_\allowbreak{}gaps} & 7 & 42\,739 & \texttt{e(obj)} & $1.7\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}td\_\allowbreak{}alternate\_\allowbreak{}years} & 7 & 34\,367 & \texttt{e(obj)} & $2.0\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}td\_\allowbreak{}collapse} & 7 & 15\,467 & \texttt{e(obj)} & $6.9\times10^{-15}$ \\
+\texttt{fd\_\allowbreak{}td\_\allowbreak{}endog} & 7 & 49\,067 & \texttt{e(obj)} & $1.6\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}td\_\allowbreak{}exog\_\allowbreak{}only} & 7 & 28\,039 & \texttt{e(obj)} & $1.8\times10^{-13}$ \\
+\texttt{fd\_\allowbreak{}td\_\allowbreak{}gaps} & 7 & 35\,627 & \texttt{e(obj)} & $1.2\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}td\_\allowbreak{}kink} & 7 & 46\,928 & \texttt{e(obj)} & $4.4\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}td\_\allowbreak{}short\_\allowbreak{}units} & 7 & 39\,267 & \texttt{e(obj)} & $6.4\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}td\_\allowbreak{}single\_\allowbreak{}period} & 7 & 33\,067 & \texttt{e(obj)} & $1.1\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}td\_\allowbreak{}sparse\_\allowbreak{}periods} & 7 & 14\,036 & \texttt{e(b)} & $9.0\times10^{-15}$ \\
+\texttt{fod\_\allowbreak{}alternate\_\allowbreak{}years} & 7 & 37\,797 & \texttt{e(b)} & $8.2\times10^{-15}$ \\
+\texttt{fod\_\allowbreak{}collapse} & 7 & 16\,167 & \texttt{e(V\_\allowbreak{}cond)} & $3.1\times10^{-14}$ \\
+\texttt{fod\_\allowbreak{}endog} & 7 & 53\,967 & \texttt{e(obj)} & $3.0\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}exog\_\allowbreak{}only} & 7 & 32\,939 & \texttt{e(obj)} & $2.2\times10^{-12}$ \\
+\texttt{fod\_\allowbreak{}gaps} & 7 & 42\,725 & \texttt{e(obj)} & $1.8\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}history\_\allowbreak{}panel} & 7 & 33\,567 & \texttt{e(obj)} & $4.9\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}history\_\allowbreak{}sample} & 7 & 14\,067 & \texttt{e(obj)} & $3.1\times10^{-13}$ \\
+\texttt{fod\_\allowbreak{}iv} & 7 & 63\,767 & \texttt{e(obj)} & $3.1\times10^{-10}$ \\
+\texttt{fod\_\allowbreak{}iv\_\allowbreak{}with\_\allowbreak{}gaps} & 7 & 46\,603 & \texttt{e(obj)} & $5.2\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}kink} & 7 & 51\,828 & \texttt{e(obj)} & $4.5\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}maxlag} & 7 & 45\,567 & \texttt{e(obj)} & $9.2\times10^{-12}$ \\
+\texttt{fod\_\allowbreak{}missing\_\allowbreak{}endog} & 7 & 50\,117 & \texttt{e(obj)} & $2.0\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}missing\_\allowbreak{}x} & 7 & 38\,569 & \texttt{e(obj)} & $6.8\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}nocenter} & 7 & 53\,967 & \texttt{e(obj)} & $4.0\times10^{-12}$ \\
+\texttt{fod\_\allowbreak{}predet} & 7 & 58\,867 & \texttt{e(obj)} & $1.2\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}refine} & 7 & 53\,967 & \texttt{e(obj)} & $1.5\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}short\_\allowbreak{}units} & 7 & 43\,187 & \texttt{e(obj)} & $6.4\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}sparse\_\allowbreak{}periods} & 7 & 26\,701 & \texttt{e(V\_\allowbreak{}cond)} & $4.7\times10^{-14}$ \\
+\texttt{fod\_\allowbreak{}static} & 7 & 18\,239 & \texttt{e(obj)} & $6.4\times10^{-14}$ \\
+\texttt{fod\_\allowbreak{}td\_\allowbreak{}alternate\_\allowbreak{}years} & 7 & 34\,367 & \texttt{e(obj)} & $4.1\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}td\_\allowbreak{}collapse} & 7 & 15\,467 & \texttt{e(obj)} & $3.0\times10^{-14}$ \\
+\texttt{fod\_\allowbreak{}td\_\allowbreak{}endog} & 7 & 49\,067 & \texttt{e(obj)} & $6.9\times10^{-12}$ \\
+\texttt{fod\_\allowbreak{}td\_\allowbreak{}exog\_\allowbreak{}only} & 7 & 28\,039 & \texttt{e(obj)} & $6.4\times10^{-13}$ \\
+\texttt{fod\_\allowbreak{}td\_\allowbreak{}gaps} & 7 & 42\,725 & \texttt{e(obj)} & $4.2\times10^{-12}$ \\
+\texttt{fod\_\allowbreak{}td\_\allowbreak{}short\_\allowbreak{}units} & 7 & 39\,267 & \texttt{e(obj)} & $1.6\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}td\_\allowbreak{}single\_\allowbreak{}period} & 7 & 36\,728 & \texttt{e(obj)} & $7.6\times10^{-9}$ \\
+\texttt{fod\_\allowbreak{}td\_\allowbreak{}sparse\_\allowbreak{}periods} & 7 & 25\,543 & \texttt{e(b)} & $2.7\times10^{-13}$ \\
+\texttt{fod\_\allowbreak{}td\_\allowbreak{}static} & 7 & 13\,339 & \texttt{e(obj)} & $2.6\times10^{-14}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: variances and diagnostics}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{fd\_\allowbreak{}alternate\_\allowbreak{}wind} & 29 & 156 & \texttt{e(ar2\_\allowbreak{}cond)} & $3.4\times10^{-14}$ \\
+\texttt{fd\_\allowbreak{}bw\_\allowbreak{}large} & 32 & 162 & \texttt{e(hansen)} & $1.7\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}bw\_\allowbreak{}small} & 32 & 162 & \texttt{e(hansen)} & $1.7\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}collapse\_\allowbreak{}wind} & 32 & 162 & \texttt{e(V)} & $6.1\times10^{-14}$ \\
+\texttt{fd\_\allowbreak{}discrete\_\allowbreak{}q} & 32 & 162 & \texttt{e(hansen)} & $4.5\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}exog\_\allowbreak{}only} & 32 & 106 & \texttt{e(hansen)} & $1.6\times10^{-12}$ \\
+\texttt{fd\_\allowbreak{}exog\_\allowbreak{}only\_\allowbreak{}wind} & 32 & 106 & \texttt{e(hansen)} & $1.6\times10^{-12}$ \\
+\texttt{fd\_\allowbreak{}gaps} & 32 & 162 & \texttt{e(hansen)} & $1.6\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}gaps\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $1.6\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}iv\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $1.3\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}jump} & 32 & 162 & \texttt{e(hansen)} & $1.7\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}jump\_\allowbreak{}q\_\allowbreak{}regressor} & 32 & 236 & \texttt{e(hansen)} & $1.1\times10^{-9}$ \\
+\texttt{fd\_\allowbreak{}jump\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $1.7\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}kink} & 28 & 77 & \texttt{e(hansen)} & $3.7\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}kink\_\allowbreak{}q\_\allowbreak{}regressor} & 30 & 98 & \texttt{e(hansen)} & $6.8\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}kink\_\allowbreak{}wind} & 28 & 77 & \texttt{e(hansen)} & $3.7\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}nocenter} & 32 & 162 & \texttt{e(hansen)} & $1.8\times10^{-12}$ \\
+\texttt{fd\_\allowbreak{}nocenter\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $1.8\times10^{-12}$ \\
+\texttt{fd\_\allowbreak{}predet} & 32 & 162 & \texttt{e(hansen)} & $2.2\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}refine\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $5.1\times10^{-12}$ \\
+\texttt{fd\_\allowbreak{}short\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $4.6\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}static} & 32 & 106 & \texttt{e(hansen)} & $2.0\times10^{-13}$ \\
+\texttt{fd\_\allowbreak{}td} & 32 & 162 & \texttt{e(hansen)} & $8.0\times10^{-12}$ \\
+\texttt{fd\_\allowbreak{}td\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $8.0\times10^{-12}$ \\
+\texttt{fod\_\allowbreak{}alternate\_\allowbreak{}wind} & 29 & 156 & \texttt{e(ar1\_\allowbreak{}cond)} & $9.8\times10^{-15}$ \\
+\texttt{fod\_\allowbreak{}bw\_\allowbreak{}small} & 32 & 162 & \texttt{e(hansen)} & $1.0\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}gaps\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $4.5\times10^{-12}$ \\
+\texttt{fod\_\allowbreak{}jump} & 32 & 162 & \texttt{e(hansen)} & $1.0\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}jump\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $1.0\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}kink} & 28 & 77 & \texttt{e(hansen)} & $2.7\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}kink\_\allowbreak{}wind} & 28 & 77 & \texttt{e(hansen)} & $2.7\times10^{-11}$ \\
+\texttt{fod\_\allowbreak{}nocenter\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $7.4\times10^{-13}$ \\
+\texttt{fod\_\allowbreak{}short} & 32 & 162 & \texttt{e(hansen)} & $1.4\times10^{-10}$ \\
+\texttt{fod\_\allowbreak{}td} & 32 & 162 & \texttt{e(hansen)} & $2.6\times10^{-12}$ \\
+\texttt{fod\_\allowbreak{}td\_\allowbreak{}wind} & 32 & 162 & \texttt{e(hansen)} & $2.6\times10^{-12}$ \\
+\texttt{full\_\allowbreak{}help} & 32 & 236 & \texttt{e(ar1\_\allowbreak{}TT)} & $3.7\times10^{-12}$ \\
+\texttt{full\_\allowbreak{}help\_\allowbreak{}fod} & 32 & 236 & \texttt{e(ar1\_\allowbreak{}TT)} & $7.3\times10^{-13}$ \\
+\texttt{full\_\allowbreak{}help\_\allowbreak{}fod\_\allowbreak{}wind} & 32 & 236 & \texttt{e(ar1\_\allowbreak{}T1)} & $5.9\times10^{-13}$ \\
+\texttt{full\_\allowbreak{}help\_\allowbreak{}kink} & 30 & 98 & \texttt{e(hansen)} & $1.1\times10^{-12}$ \\
+\texttt{full\_\allowbreak{}help\_\allowbreak{}kink\_\allowbreak{}wind} & 30 & 98 & \texttt{e(hansen)} & $1.1\times10^{-12}$ \\
+\texttt{full\_\allowbreak{}help\_\allowbreak{}wind} & 32 & 236 & \texttt{e(ar2\_\allowbreak{}TT)} & $3.9\times10^{-13}$ \\
+\texttt{full\_\allowbreak{}maxlag\_\allowbreak{}2\_\allowbreak{}10\_\allowbreak{}wind} & 32 & 236 & \texttt{e(hansen)} & $1.1\times10^{-9}$ \\
+\texttt{full\_\allowbreak{}unbalanced\_\allowbreak{}alternate\_\allowbreak{}wind} & 32 & 236 & \texttt{e(ar1\_\allowbreak{}T1)} & $2.6\times10^{-12}$ \\
+\texttt{full\_\allowbreak{}unbalanced\_\allowbreak{}gaps\_\allowbreak{}wind} & 32 & 236 & \texttt{e(ar1\_\allowbreak{}b0)} & $2.5\times10^{-13}$ \\
+\texttt{full\_\allowbreak{}unbalanced\_\allowbreak{}short} & 32 & 236 & \texttt{e(ar1\_\allowbreak{}TT)} & $8.7\times10^{-13}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: predict}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{fd\_\allowbreak{}jump} & 5 & 3\,500 & \texttt{predict residuals} & $4.3\times10^{-14}$ \\
+\texttt{fd\_\allowbreak{}kink} & 5 & 3\,500 & \texttt{predict residuals} & $2.5\times10^{-13}$ \\
+\texttt{fd\_\allowbreak{}short\_\allowbreak{}wind} & 5 & 2\,830 & \texttt{predict residuals} & $3.3\times10^{-13}$ \\
+\texttt{fd\_\allowbreak{}td} & 5 & 3\,500 & \texttt{predict residuals} & $1.3\times10^{-14}$ \\
+\texttt{fod\_\allowbreak{}alternate\_\allowbreak{}wind} & 5 & 2\,530 & \texttt{predict ar\_\allowbreak{}residuals} & $1.7\times10^{-15}$ \\
+\texttt{fod\_\allowbreak{}gaps\_\allowbreak{}wind} & 5 & 2\,743 & \texttt{predict ar\_\allowbreak{}residuals} & $1.8\times10^{-14}$ \\
+\texttt{fod\_\allowbreak{}jump} & 5 & 3\,400 & \texttt{predict ar\_\allowbreak{}residuals} & $2.7\times10^{-14}$ \\
+\texttt{fod\_\allowbreak{}kink} & 5 & 3\,400 & \texttt{predict ar\_\allowbreak{}residuals} & $8.8\times10^{-15}$ \\
+\texttt{fod\_\allowbreak{}short} & 5 & 2\,750 & \texttt{predict ar\_\allowbreak{}residuals} & $2.8\times10^{-13}$ \\
+\texttt{fod\_\allowbreak{}td} & 5 & 3\,400 & \texttt{predict ar\_\allowbreak{}residuals} & $2.3\times10^{-14}$ \\
+\texttt{full\_\allowbreak{}help\_\allowbreak{}fod} & 5 & 34\,465 & \texttt{predict ar\_\allowbreak{}residuals} & $8.6\times10^{-14}$ \\
+\texttt{xb\_\allowbreak{}plus\_\allowbreak{}residuals\_\allowbreak{}is\_\allowbreak{}the\_\allowbreak{}transformed\_\allowbreak{}dependent\_\allowbreak{}variable} & 1 & 700 & \texttt{xb + residuals} & $6.9\times10^{-18}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: bootstraps, confidence set, tests}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{citest\_\allowbreak{}fod} & 20 & 272 & \texttt{e(ci\_\allowbreak{}grid)} & $2.8\times10^{-9}$ \\
+\texttt{citest\_\allowbreak{}inside} & 20 & 270 & \texttt{e(ci\_\allowbreak{}grid)} & $1.1\times10^{-9}$ \\
+\texttt{citest\_\allowbreak{}kink} & 20 & 270 & \texttt{e(ci\_\allowbreak{}grid)} & $4.3\times10^{-10}$ \\
+\texttt{citest\_\allowbreak{}one\_\allowbreak{}step} & 20 & 270 & \texttt{e(ci\_\allowbreak{}grid)} & $5.6\times10^{-16}$ \\
+\texttt{citest\_\allowbreak{}outside} & 20 & 270 & \texttt{e(citest\_\allowbreak{}crit)} & $1.4\times10^{-9}$ \\
+\texttt{citest\_\allowbreak{}unseeded\_\allowbreak{}subset} & 20 & 270 & \texttt{e(ci\_\allowbreak{}grid)} & $1.1\times10^{-9}$ \\
+\texttt{citest\_\allowbreak{}with\_\allowbreak{}tests} & 22 & 278 & \texttt{e(ci\_\allowbreak{}grid)} & $9.9\times10^{-9}$ \\
+\texttt{coef\_\allowbreak{}onestep} & 20 & 283 & \texttt{e(ci\_\allowbreak{}grid)} & $1.1\times10^{-9}$ \\
+\texttt{coef\_\allowbreak{}onestep\_\allowbreak{}percentile} & 20 & 283 & \texttt{e(ci\_\allowbreak{}grid)} & $1.1\times10^{-9}$ \\
+\texttt{coef\_\allowbreak{}onestep\_\allowbreak{}td} & 20 & 287 & \texttt{e(ci\_\allowbreak{}grid)} & $3.1\times10^{-10}$ \\
+\texttt{coef\_\allowbreak{}twostep} & 20 & 283 & \texttt{e(ci\_\allowbreak{}grid)} & $1.1\times10^{-9}$ \\
+\texttt{coef\_\allowbreak{}twostep\_\allowbreak{}collapse} & 20 & 287 & \texttt{e(ci\_\allowbreak{}grid)} & $1.6\times10^{-12}$ \\
+\texttt{coef\_\allowbreak{}twostep\_\allowbreak{}fod} & 20 & 285 & \texttt{e(ci\_\allowbreak{}grid)} & $2.8\times10^{-9}$ \\
+\texttt{coef\_\allowbreak{}twostep\_\allowbreak{}kink} & 20 & 277 & \texttt{e(ci\_\allowbreak{}grid)} & $4.3\times10^{-10}$ \\
+\texttt{coef\_\allowbreak{}twostep\_\allowbreak{}one\_\allowbreak{}step\_\allowbreak{}fit} & 20 & 283 & \texttt{e(b\_\allowbreak{}bootci)} & $3.1\times10^{-14}$ \\
+\texttt{coef\_\allowbreak{}twostep\_\allowbreak{}percentile} & 20 & 283 & \texttt{e(ci\_\allowbreak{}grid)} & $1.1\times10^{-9}$ \\
+\texttt{coef\_\allowbreak{}twostep\_\allowbreak{}refine} & 20 & 293 & \texttt{e(ci\_\allowbreak{}grid)} & $1.5\times10^{-9}$ \\
+\texttt{cont\_\allowbreak{}fd} & 15 & 271 & \texttt{e(ci\_\allowbreak{}grid)} & $9.9\times10^{-9}$ \\
+\texttt{cont\_\allowbreak{}fd\_\allowbreak{}collapse} & 15 & 255 & \texttt{e(ci\_\allowbreak{}grid)} & $8.2\times10^{-10}$ \\
+\texttt{cont\_\allowbreak{}fd\_\allowbreak{}gaps} & 15 & 269 & \texttt{e(ci\_\allowbreak{}grid)} & $3.8\times10^{-8}$ \\
+\texttt{cont\_\allowbreak{}fd\_\allowbreak{}one\_\allowbreak{}step} & 15 & 259 & \texttt{e(ci\_\allowbreak{}grid)} & $3.1\times10^{-15}$ \\
+\texttt{cont\_\allowbreak{}fd\_\allowbreak{}static} & 15 & 269 & \texttt{e(ci\_\allowbreak{}grid)} & $1.3\times10^{-10}$ \\
+\texttt{cont\_\allowbreak{}fd\_\allowbreak{}td} & 15 & 265 & \texttt{e(ci\_\allowbreak{}grid)} & $2.9\times10^{-9}$ \\
+\texttt{cont\_\allowbreak{}fod} & 15 & 267 & \texttt{e(ci\_\allowbreak{}grid)} & $4.0\times10^{-9}$ \\
+\texttt{fd\_\allowbreak{}collapse} & 13 & 267 & \texttt{e(ci\_\allowbreak{}grid)} & $1.6\times10^{-12}$ \\
+\texttt{fd\_\allowbreak{}exog\_\allowbreak{}only} & 13 & 259 & \texttt{e(ci\_\allowbreak{}grid)} & $2.0\times10^{-11}$ \\
+\texttt{fd\_\allowbreak{}gaps} & 13 & 267 & \texttt{e(ci\_\allowbreak{}grid)} & $2.4\times10^{-9}$ \\
+\texttt{fd\_\allowbreak{}iv} & 13 & 265 & \texttt{e(ci\_\allowbreak{}grid)} & $4.0\times10^{-8}$ \\
+\texttt{fd\_\allowbreak{}jump} & 13 & 263 & \texttt{e(ci\_\allowbreak{}grid)} & $1.1\times10^{-9}$ \\
+\texttt{fd\_\allowbreak{}kink} & 13 & 263 & \texttt{e(ci\_\allowbreak{}grid)} & $4.3\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}level\_\allowbreak{}90} & 13 & 263 & \texttt{e(ci\_\allowbreak{}grid)} & $1.5\times10^{-9}$ \\
+\texttt{fd\_\allowbreak{}no\_\allowbreak{}linearity\_\allowbreak{}test} & 11 & 260 & \texttt{e(ci\_\allowbreak{}grid)} & $1.1\times10^{-9}$ \\
+\texttt{fd\_\allowbreak{}one\_\allowbreak{}step} & 13 & 263 & \texttt{e(ci\_\allowbreak{}grid)} & $5.6\times10^{-16}$ \\
+\texttt{fd\_\allowbreak{}quantile\_\allowbreak{}grid} & 13 & 267 & \texttt{e(ci\_\allowbreak{}grid)} & $2.9\times10^{-9}$ \\
+\texttt{fd\_\allowbreak{}refine} & 13 & 273 & \texttt{e(ci\_\allowbreak{}grid)} & $1.5\times10^{-9}$ \\
+\texttt{fd\_\allowbreak{}short} & 13 & 267 & \texttt{e(ci\_\allowbreak{}grid)} & $8.9\times10^{-8}$ \\
+\texttt{fd\_\allowbreak{}small\_\allowbreak{}boot} & 13 & 271 & \texttt{e(ci\_\allowbreak{}grid)} & $9.3\times10^{-10}$ \\
+\texttt{fd\_\allowbreak{}static} & 13 & 273 & \texttt{e(ci\_\allowbreak{}grid)} & $1.6\times10^{-12}$ \\
+\texttt{fd\_\allowbreak{}td} & 13 & 267 & \texttt{e(ci\_\allowbreak{}grid)} & $3.1\times10^{-10}$ \\
+\texttt{fod\_\allowbreak{}jump} & 13 & 265 & \texttt{e(ci\_\allowbreak{}grid)} & $2.8\times10^{-9}$ \\
+\texttt{fod\_\allowbreak{}kink} & 13 & 261 & \texttt{e(ci\_\allowbreak{}grid)} & $2.0\times10^{-10}$ \\
+\texttt{fod\_\allowbreak{}one\_\allowbreak{}step} & 13 & 269 & \texttt{e(ci\_\allowbreak{}grid)} & $1.2\times10^{-15}$ \\
+\texttt{fod\_\allowbreak{}td} & 13 & 267 & \texttt{e(ci\_\allowbreak{}grid)} & $2.9\times10^{-10}$ \\
+\texttt{full\_\allowbreak{}citest} & 20 & 266 & \texttt{e(ci\_\allowbreak{}grid)} & $2.4\times10^{-10}$ \\
+\texttt{full\_\allowbreak{}cont} & 15 & 261 & \texttt{e(ci\_\allowbreak{}grid)} & $2.4\times10^{-10}$ \\
+\texttt{full\_\allowbreak{}help} & 13 & 259 & \texttt{e(ci\_\allowbreak{}grid)} & $2.4\times10^{-10}$ \\
+\texttt{full\_\allowbreak{}help\_\allowbreak{}fod} & 13 & 265 & \texttt{e(ci\_\allowbreak{}grid)} & $1.1\times10^{-9}$ \\
+\texttt{full\_\allowbreak{}help\_\allowbreak{}kink} & 13 & 257 & \texttt{e(ci\_\allowbreak{}grid)} & $1.6\times10^{-11}$ \\
+\texttt{unit\_\allowbreak{}citest} & 11 & 138 & \texttt{e(ci\_\allowbreak{}grid)} & $5.0\times10^{-16}$ \\
+\texttt{unit\_\allowbreak{}collapse} & 13 & 263 & \texttt{e(ci\_\allowbreak{}grid)} & $6.3\times10^{-12}$ \\
+\texttt{unit\_\allowbreak{}exog\_\allowbreak{}only} & 13 & 257 & \texttt{e(ci\_\allowbreak{}grid)} & $1.9\times10^{-9}$ \\
+\texttt{unit\_\allowbreak{}fd} & 8 & 135 & \texttt{e(ci\_\allowbreak{}grid)} & $5.0\times10^{-16}$ \\
+\texttt{unit\_\allowbreak{}gaps} & 8 & 130 & \texttt{e(ci\_\allowbreak{}grid)} & $4.4\times10^{-16}$ \\
+\texttt{unit\_\allowbreak{}nocenter} & 13 & 263 & \texttt{e(ci\_\allowbreak{}grid)} & $3.7\times10^{-12}$ \\
+\texttt{unit\_\allowbreak{}quantile\_\allowbreak{}grid} & 8 & 134 & \texttt{e(ci\_\allowbreak{}grid)} & $4.7\times10^{-16}$ \\
+\texttt{unit\_\allowbreak{}static} & 13 & 261 & \texttt{e(ci\_\allowbreak{}grid)} & $8.0\times10^{-12}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: unbalanced panel of the help file (no bootstrap)}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{fd} & 4 & 92 & \texttt{e(obj)} & $6.6\times10^{-14}$ \\
+\texttt{fod} & 4 & 92 & \texttt{e(obj)} & $5.0\times10^{-14}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{xtdpthresh: hostile inputs}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{iv\_\allowbreak{}equals\_\allowbreak{}x} & 1 & 5 & \texttt{value} & $4.8\times10^{-8}$ \\
+\texttt{q\_\allowbreak{}four\_\allowbreak{}values} & 1 & 7 & \texttt{value} & $4.9\times10^{-15}$ \\
+\texttt{units\_\allowbreak{}fewer\_\allowbreak{}than\_\allowbreak{}iv} & 1 & 5 & \texttt{value} & $9.2\times10^{-9}$ \\
+\texttt{units\_\allowbreak{}fewer\_\allowbreak{}than\_\allowbreak{}iv\_\allowbreak{}boot} & 1 & 7 & \texttt{value} & $5.9\times10^{-8}$ \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Simulated panels of the Seo-Shin design}
+
+\begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
+\toprule
+Case & Objects & Values & Worst object & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{1} & 1 & 5 & \texttt{value} & $3.4\times10^{-9}$ \\
+\texttt{2} & 1 & 5 & \texttt{value} & $4.5\times10^{-9}$ \\
+\texttt{3} & 1 & 5 & \texttt{value} & $4.5\times10^{-9}$ \\
+\texttt{4} & 1 & 5 & \texttt{value} & $4.3\times10^{-9}$ \\
+\bottomrule
+\end{longtable}
+
+\section{Comparisons under a looser tolerance}
+The rule of Section 1 holds for every other value of this report. 4 comparison(s) are made under a looser relative tolerance, declared in the test and not hidden in the tables above: the input is so ill-conditioned that the error of any implementation is of the order of the condition number times the machine precision (a matrix of condition number $10^{13}$ gives about $10^{-3}$), so two correct inverses legitimately differ in the fourth digit.
+\begin{longtable}{@{}p{3cm}p{3cm}rr@{}}
+\toprule
+Case & Object & Relative tolerance & $|\Delta|$ \\
+\midrule
+\endhead
+\texttt{cond13} & \texttt{invsym} & $1.0\times10^{-3}$ & $6.0\times10^{1}$ \\
+\texttt{cond13} & \texttt{cholinv} & $1.0\times10^{-3}$ & $2.3\times10^{8}$ \\
+\texttt{cond13} & \texttt{syminv\_\allowbreak{}ok} & $1.0\times10^{-3}$ & 0 \\
+\texttt{cond13} & \texttt{psd} & $1.0\times10^{-3}$ & 0 \\
+\bottomrule
+\end{longtable}
+
+\section{What this report does not cover}
+\begin{itemize}
+\item The statistical behaviour of the package's own seeds (size and power of the tests, coverage
+of the confidence set over many panels) is measured by Monte Carlo and compared with the papers,
+not with Stata.
+\item The tables written by the package (LaTeX, HTML, Word, Excel) repeat the validated numbers;
+the tests check the printed digits, not the typography. They are not in the deviations above.
+\item Timings are measured on the same machine one run after the other and are not a validation.
+\item The messages that Stata prints and the package does not (the warning of an unbalanced
+\code{boottype(unit)} and the hint on near-common variables in a rank failure) are not compared;
+they do not change any number.
+\end{itemize}
+\section{Environment}
+\begin{tabular}{@{}ll@{}}
+Reference & Stata 17.0 MP; xthenreg (Seo, Kim and Kim 2019) and xtdpthresh 0.9.38 \\
+Package & pyxtdpthresh 0.0.1 \\
+Python & 3.12.10; NumPy 2.5.4; Numba 0.68.1 \\
+Platform & Windows 11 \\
+Report built & 03 November 2026 \\
+\end{tabular}
+\end{document}

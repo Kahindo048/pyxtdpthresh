@@ -24,7 +24,8 @@ class Options:
     lang : {"en", "fr"}
         Language of messages and diagnostic reports.
     threads : int or None
-        Number of Numba threads; ``None`` keeps the Numba default.
+        Threads of the matrix products (BLAS); ``None`` uses half of the logical cores.  The
+        Numba kernels run on one thread, which is faster than letting them compete with BLAS.
     progress : bool
         Show a progress indicator during long bootstraps.
     """

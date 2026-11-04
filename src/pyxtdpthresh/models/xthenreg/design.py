@@ -56,6 +56,8 @@ class XthenregData:
         Number of plain, ``endogenous()`` and ``exogenous()`` regressors.
     n_units_ignored
         Units dropped because they are not observed in every period of the sample.
+    y_name, q_name
+        Names of the dependent and threshold variables (for labelling the results).
     """
 
     unit_labels: np.ndarray
@@ -69,6 +71,8 @@ class XthenregData:
     n_endo: int
     n_exo: int
     n_units_ignored: int
+    y_name: str = ""
+    q_name: str = ""
 
     @property
     def n_units(self) -> int:
@@ -175,6 +179,8 @@ def prepare_data(
         n_endo=len(endogenous),
         n_exo=len(exogenous),
         n_units_ignored=n_ignored,
+        y_name=y,
+        q_name=q,
     )
 
 
@@ -195,6 +201,8 @@ def moment_matrix(n_periods: int, k_1: int, n_endo: int, n_exo: int, k_inst: int
     if n_lev:
         counts[:, k_1 + 1 - n_lev :] = levels[:, None]
     if n_exo:
+        # STATA-QUIRK: an exogenous() regressor enters with its levels up to t, two more lags
+        # than an endogenous() one (x_1 .. x_t, not x_1 .. x_{t-2}), as the Stata code is written.
         counts[:, k_1 + 1 - n_exo :] += 2
     if k_inst:
         counts = np.hstack([counts, np.ones((rows, k_inst), dtype=np.int64)])

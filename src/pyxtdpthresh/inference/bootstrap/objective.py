@@ -20,8 +20,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from pyxtdpthresh._types import BoolArray, FloatArray
-from pyxtdpthresh.core.linalg import objtol, syminv
+from pyxtdpthresh._types import BoolArray, FloatArray, IntArray
+from pyxtdpthresh.core.linalg import syminv
+from pyxtdpthresh.kernels.profile import profile_rows
 
 #: Largest number of elements of the ``(candidates, L, B)`` work array.
 CHUNK_ELEMENTS = 8_000_000
@@ -70,6 +71,7 @@ class Family:
 def make_family(zw: list[FloatArray | None], weight: FloatArray, n_params: int) -> Family:
     """Build the solvers of the candidates ``zw`` (``None`` for a candidate that does not exist)."""
     # Stata: xdpt2_build_gamma_cache_t (C_g, xtdpthresh.ado:4597), xdpt2_cache_w2 (6647)
+    # Stata: xdpt2_w2_solvable (xtdpthresh.ado:6634), the admission of the fixed-weight solve
     n_moments = weight.shape[0]
     count = len(zw)
     zws = np.zeros((count, n_moments, n_params))
@@ -120,6 +122,8 @@ def criterion(
         ``(len(index), B)``; ``nan`` where the candidate is not solvable or a term is not finite.
     """
     # Stata: xdpt2_fast_obj_split_list (xtdpthresh.ado:4668), in cross-product form
+    # Stata: xdpt2_fast_gmm_boot (xtdpthresh.ado:4620), one criterion per draw and candidate
+    # Stata: xdpt2_fast_gmm_boot_w (xtdpthresh.ado:6667), with the fixed second-step weight
     chosen = np.arange(family.size) if index is None else np.asarray(index, dtype=np.int64)
     n_samples = moments.shape[1]
     out = np.full((chosen.size, n_samples), np.nan)
@@ -188,21 +192,28 @@ def profile_min(values: FloatArray, gammas: FloatArray) -> tuple[int, int, float
     Ties (relative ``1e-12``) go to the smaller threshold.
     """
     # Stata: running argmin with xdpt2_objtol(.., 1e-12) in xdpt2_coef_bootstrap
-    best, count, high = -1, 0, math.nan
-    for i in np.flatnonzero(np.isfinite(values)):
-        value = float(values[i])
-        count += 1
-        if math.isnan(high) or value > high:
-            high = value
-        if best < 0:
-            best = int(i)
-            continue
-        tol = objtol(value, float(values[best]), 1e-12)
-        if value < values[best] - tol or (
-            abs(value - values[best]) <= tol and gammas[i] < gammas[best]
-        ):
-            best = int(i)
-    return best, count, high
+    best, count, high = profile_rows(np.asarray(values, dtype=np.float64)[None, :], gammas)
+    return int(best[0]), int(count[0]), float(high[0])
+
+
+def usable_minimum(
+    values: FloatArray, gammas: FloatArray
+) -> tuple[IntArray, FloatArray, BoolArray]:
+    """Smallest value of each row of ``values`` and whether the row has a usable profile.
+
+    A profile is usable when it has a minimum and is not degenerate (:func:`is_degenerate`:
+    fewer than two points, or flat).
+
+    Returns
+    -------
+    best, low, usable
+        Position and value of the smallest finite value of each row (``-1`` and ``nan``
+        without any), and the mask of the rows with a usable profile.
+    """
+    best, count, high = profile_rows(values, gammas)
+    low = np.where(best >= 0, values[np.arange(values.shape[0]), np.maximum(best, 0)], np.nan)
+    flat = (count < 2) | (np.abs(high - low) <= 1e-12 * np.maximum(np.abs(low), np.abs(high)))
+    return best, low, (best >= 0) & ~flat
 
 
 def is_degenerate(low: float, high: float, count: int) -> bool:

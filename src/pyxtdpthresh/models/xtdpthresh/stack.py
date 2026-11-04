@@ -145,6 +145,13 @@ class Stack:
         # Stata: xdpt2_transform_unit, regime regressors (xtdpthresh.ado:2833-2905)
         return self.transform_levels(self._regime_levels(gamma))
 
+    def fitted(self, gamma: float, theta: FloatArray) -> FloatArray:
+        """Return ``regressors(gamma) @ theta``, transforming one column instead of ``p``.
+
+        The transformation of the levels is linear, so the fitted levels are transformed once.
+        """
+        return self.transform_levels(self._regime_levels(gamma) @ theta)
+
     def bandwidth(self, scale: float) -> float:
         """Kernel bandwidth ``scale * 1.06 * s_q * n^(-1/5)`` of the jump model's joint variance."""
         # Stata: xdpt2_jump_xg_tp (xtdpthresh.ado:5058), n = units with an equation
@@ -158,6 +165,8 @@ class Stack:
         although the sample moment is a step function).  Kink model: ``-delta_k T(1(q > gamma))``.
         """
         # Stata: xdpt2_jump_xg_tp (xtdpthresh.ado:5035), xdpt2_ar_xg (5149)
+        # Stata: xdpt2_jump_xg (xtdpthresh.ado:5067), the jump derivative without the template
+        # Stata: xdpt2_kink_xg (xtdpthresh.ado:4954), the kink derivative
         if self.kink:
             above = (self.level_q > gamma).astype(np.float64)
             return np.asarray(-theta[-1] * self.transform_levels(above))

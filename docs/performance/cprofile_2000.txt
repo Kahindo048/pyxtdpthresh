@@ -1,0 +1,33 @@
+         186822 function calls (186791 primitive calls) in 1.893 seconds
+
+   Ordered by: internal time
+   List reduced from 657 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      201    0.262    0.001    0.412    0.002 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\inference\bootstrap\objective.py:101(criterion)
+      100    0.158    0.002    0.158    0.002 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\inference\bootstrap\objective.py:149(sample_moments)
+      201    0.136    0.001    0.136    0.001 {built-in method numpy._core._multiarray_umath.c_einsum}
+       99    0.115    0.001    1.013    0.010 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\models\xtdpthresh\bootstrap.py:484(distances)
+      611    0.079    0.000    0.614    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\core\linalg.py:192(syminv)
+      105    0.078    0.001    0.122    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\models\xtdpthresh\stack.py:135(transform_levels)
+      113    0.066    0.001    0.066    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\instruments\matrix.py:54(rmatmul)
+     6626    0.045    0.000    0.045    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+     2905    0.035    0.000    0.035    0.000 {method 'astype' of 'numpy.ndarray' objects}
+      301    0.035    0.000    0.394    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\core\gmm.py:134(solve_fixed_weight)
+      103    0.030    0.000    0.030    0.000 {built-in method scipy.sparse._sparsetools.csr_matvecs}
+      611    0.027    0.000    0.315    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\core\linalg.py:87(_invsym)
+      611    0.025    0.000    0.039    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\linalg\_linalg.py:1909(_cond_svdvals)
+     4382    0.023    0.000    0.044    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\_core\fromnumeric.py:86(_wrapreduction_any_all)
+     1226    0.023    0.000    0.027    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\_core\numeric.py:905(outer)
+      612    0.021    0.000    0.043    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\linalg\_linalg.py:789(cholesky)
+      611    0.021    0.000    0.065    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\scipy\_lib\_util.py:1102(wrapper)
+      100    0.019    0.000    0.030    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\models\xtdpthresh\bootstrap.py:88(_alternative_minimum)
+      103    0.019    0.000    0.070    0.001 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\kernels\units.py:35(unit_moments)
+        4    0.018    0.004    0.278    0.069 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\inference\bootstrap\objective.py:70(make_family)
+     1222    0.017    0.000    0.073    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\lib\_twodim_base_impl.py:537(triu)
+      611    0.017    0.000    0.071    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\numpy\linalg\_linalg.py:1923(cond)
+      611    0.017    0.000    0.022    0.000 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\.venv\Lib\site-packages\scipy\linalg\_decomp_cholesky.py:271(_cho_solve)
+     1222    0.017    0.000    0.017    0.000 {method 'outer' of 'numpy.ufunc' objects}
+        2    0.016    0.008    0.042    0.021 C:\Users\Fred-derick\Desktop\Dynamic threshold\pyxtdpthresh\src\pyxtdpthresh\inference\bootstrap\draws.py:39(mammen_weights)
+
+

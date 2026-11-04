@@ -1,0 +1,424 @@
+{
+ "xtdpthresh.ado": {
+  "functions": {
+   "_xdpt_coeftab": [
+    2319,
+    2367
+   ],
+   "_xdpt_tsdouble": [
+    2368,
+    2390
+   ],
+   "_xdpt_tsterm": [
+    2391,
+    2466
+   ],
+   "_xdpt_upper": [
+    2257,
+    2318
+   ],
+   "xdpt2_append_candidates": [
+    5275,
+    5358
+   ],
+   "xdpt2_append_nested_level": [
+    5359,
+    5385
+   ],
+   "xdpt2_ar_full": [
+    8092,
+    8260
+   ],
+   "xdpt2_ar_xg": [
+    5149,
+    5190
+   ],
+   "xdpt2_build_W_ma1": [
+    3808,
+    3879
+   ],
+   "xdpt2_build_cluster_omega": [
+    4001,
+    4011
+   ],
+   "xdpt2_build_cluster_omega_c": [
+    4012,
+    4047
+   ],
+   "xdpt2_build_gamma_cache": [
+    4359,
+    4382
+   ],
+   "xdpt2_build_gamma_cache_t": [
+    4383,
+    4619
+   ],
+   "xdpt2_build_units": [
+    2587,
+    2689
+   ],
+   "xdpt2_cache_w2": [
+    6647,
+    6666
+   ],
+   "xdpt2_coef_bootstrap": [
+    6357,
+    6633
+   ],
+   "xdpt2_component_seed": [
+    4796,
+    4806
+   ],
+   "xdpt2_const_within": [
+    8261,
+    8304
+   ],
+   "xdpt2_continuity_test": [
+    7431,
+    7767
+   ],
+   "xdpt2_crit_orderstat": [
+    4839,
+    4888
+   ],
+   "xdpt2_demean_bytime": [
+    3142,
+    3176
+   ],
+   "xdpt2_dense_uid": [
+    4740,
+    4759
+   ],
+   "xdpt2_drop_cellconst": [
+    3304,
+    3399
+   ],
+   "xdpt2_fast_gmm_boot": [
+    4620,
+    4667
+   ],
+   "xdpt2_fast_gmm_boot_w": [
+    6667,
+    6696
+   ],
+   "xdpt2_fast_obj_split_list": [
+    4668,
+    4739
+   ],
+   "xdpt2_find_t": [
+    2703,
+    2720
+   ],
+   "xdpt2_gmm_sandwich": [
+    4048,
+    4099
+   ],
+   "xdpt2_grid_bootstrap": [
+    6697,
+    7430
+   ],
+   "xdpt2_grid_search": [
+    5630,
+    6356
+   ],
+   "xdpt2_gsum_by_unit": [
+    3957,
+    4000
+   ],
+   "xdpt2_hansen_j": [
+    8048,
+    8091
+   ],
+   "xdpt2_hasmiss": [
+    2791,
+    2800
+   ],
+   "xdpt2_indep_cols": [
+    3177,
+    3243
+   ],
+   "xdpt2_is_strongly_balanced": [
+    4760,
+    4782
+   ],
+   "xdpt2_jump_xg": [
+    5067,
+    5120
+   ],
+   "xdpt2_jump_xg_tp": [
+    5035,
+    5066
+   ],
+   "xdpt2_kink_apply_joint": [
+    5237,
+    5256
+   ],
+   "xdpt2_kink_joint_V": [
+    5191,
+    5209
+   ],
+   "xdpt2_kink_joint_wind": [
+    5210,
+    5236
+   ],
+   "xdpt2_kink_refine": [
+    5516,
+    5629
+   ],
+   "xdpt2_kink_xg": [
+    4954,
+    4986
+   ],
+   "xdpt2_linearity_test": [
+    7768,
+    8047
+   ],
+   "xdpt2_mammen_draw": [
+    4783,
+    4795
+   ],
+   "xdpt2_n_switch": [
+    4274,
+    4308
+   ],
+   "xdpt2_near_common": [
+    3400,
+    3443
+   ],
+   "xdpt2_nested_midpoints": [
+    5257,
+    5274
+   ],
+   "xdpt2_nodup_cols": [
+    3244,
+    3303
+   ],
+   "xdpt2_objtol": [
+    2497,
+    2515
+   ],
+   "xdpt2_p_fill": [
+    8349,
+    8434
+   ],
+   "xdpt2_profile_is_flat": [
+    5456,
+    5469
+   ],
+   "xdpt2_profile_stability": [
+    5470,
+    5515
+   ],
+   "xdpt2_profile_update": [
+    5386,
+    5455
+   ],
+   "xdpt2_psd_ok": [
+    2554,
+    2586
+   ],
+   "xdpt2_q_at_rows": [
+    2721,
+    2743
+   ],
+   "xdpt2_q_nvals": [
+    5121,
+    5148
+   ],
+   "xdpt2_q_support": [
+    2744,
+    2790
+   ],
+   "xdpt2_quantile": [
+    4807,
+    4838
+   ],
+   "xdpt2_quantile_grid": [
+    2467,
+    2479
+   ],
+   "xdpt2_rangen": [
+    2480,
+    2496
+   ],
+   "xdpt2_rowsig2": [
+    8305,
+    8348
+   ],
+   "xdpt2_solve_gmm_1step": [
+    3880,
+    3916
+   ],
+   "xdpt2_solve_gmm_1step_pre": [
+    3917,
+    3956
+   ],
+   "xdpt2_stack_at_gamma": [
+    3452,
+    3807
+   ],
+   "xdpt2_syminv": [
+    2516,
+    2553
+   ],
+   "xdpt2_tpl_build": [
+    4100,
+    4226
+   ],
+   "xdpt2_tpl_dW": [
+    4227,
+    4273
+   ],
+   "xdpt2_tpl_release": [
+    4309,
+    4358
+   ],
+   "xdpt2_tpl_trans": [
+    4987,
+    5034
+   ],
+   "xdpt2_tpos": [
+    2690,
+    2702
+   ],
+   "xdpt2_transform_unit": [
+    2801,
+    3141
+   ],
+   "xdpt2_unit_cfg": [
+    3444,
+    3451
+   ],
+   "xdpt2_w2_solvable": [
+    6634,
+    6646
+   ],
+   "xdpt2_windmeijer": [
+    4889,
+    4953
+   ],
+   "xtdpthresh": [
+    5,
+    2256
+   ],
+   "xtdpthresh_run": [
+    8435,
+    11202
+   ]
+  },
+  "lines": 11202,
+  "sha256": "52e1f5488b9cca8587c7e4ca78483835da308f480d82f69b0278ea9159c09686"
+ },
+ "xtdpthresh_p.ado": {
+  "functions": {
+   "xdpt2_p_fill": [
+    219,
+    307
+   ],
+   "xdpt2_rowsig2": [
+    308,
+    346
+   ],
+   "xtdpthresh_p": [
+    49,
+    218
+   ]
+  },
+  "lines": 346,
+  "sha256": "7406e7abe7a7dddb5db492b6d51614fad58a649e478dd7c0d58d254a365f3f95"
+ },
+ "xthenreg.ado": {
+  "functions": {
+   "FD_con": [
+    885,
+    895
+   ],
+   "GMM_W_n_2_con": [
+    1293,
+    1316
+   ],
+   "GMM_W_n_con": [
+    1110,
+    1174
+   ],
+   "GMM_W_n_static": [
+    1349,
+    1414
+   ],
+   "GMM_cal": [
+    1175,
+    1207
+   ],
+   "GMM_cal_kink": [
+    1415,
+    1453
+   ],
+   "GMM_var_con": [
+    1014,
+    1109
+   ],
+   "Z_mat_IV_add": [
+    1454,
+    1531
+   ],
+   "Z_mat_con": [
+    896,
+    1013
+   ],
+   "cov_con_b": [
+    2034,
+    2079
+   ],
+   "cov_con_kink_b": [
+    2080,
+    2117
+   ],
+   "cov_mat_con": [
+    1532,
+    1593
+   ],
+   "cov_mat_con_kink": [
+    1594,
+    1635
+   ],
+   "ep_cal": [
+    1208,
+    1249
+   ],
+   "ep_cal_kink": [
+    1250,
+    1292
+   ],
+   "grid_con": [
+    870,
+    884
+   ],
+   "index_non_ms": [
+    1636,
+    1682
+   ],
+   "maincode_0719": [
+    321,
+    869
+   ],
+   "moment_mat_con": [
+    1317,
+    1348
+   ],
+   "sup_wald_cal": [
+    1683,
+    1919
+   ],
+   "sup_wald_fb": [
+    1920,
+    2033
+   ],
+   "xthenreg": [
+    21,
+    320
+   ]
+  },
+  "lines": 2117,
+  "sha256": "451827be4766d0bfab3ddfdb27653fcb722f5378c1e76214f4ec6717a5ef881e"
+ }
+}

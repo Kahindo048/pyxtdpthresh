@@ -1,0 +1,11 @@
+include LICENSE NOTICE.md CITATION.cff CHANGELOG.md CONTRIBUTING.md README.md requirements-lock.txt
+recursive-include docs *.md *.tex *.pdf *.png *.csv *.txt
+recursive-include examples *.py
+recursive-include tools *.py
+recursive-include tests *.py *.json *.csv *.gz
+recursive-include validation *.py *.do *.json *.jsonl *.dta *.ps1
+prune validation/out
+prune validation/drafts
+prune validation/stata/__pycache__
+exclude validation/stata/_run_*
+global-exclude __pycache__ *.py[cod] *.log

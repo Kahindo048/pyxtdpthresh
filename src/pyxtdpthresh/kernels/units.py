@@ -52,16 +52,33 @@ def unit_moments(
     numpy.ndarray
         ``(n_units, L)`` array.
     """
-    apply_threads()
     z_csr = sparse.csr_matrix(z, dtype=np.float64)
+    return unit_moments_arrays(
+        z_csr.indptr.astype(np.int64), z_csr.indices.astype(np.int64), z_csr.data,
+        z_csr.shape, resid, unit_ptr,
+    )  # fmt: skip
+
+
+def unit_moments_arrays(
+    indptr: IntArray,
+    indices: IntArray,
+    data: FloatArray,
+    shape: tuple[int, int],
+    resid: FloatArray,
+    unit_ptr: IntArray,
+) -> FloatArray:
+    """Return :func:`unit_moments` for ``Z`` given as ``int64`` compressed-row arrays.
+
+    Callers that multiply by the same ``Z`` many times (the bootstrap does it once per candidate
+    threshold) keep the arrays and skip the conversion of the index arrays at every call.
+    """
+    apply_threads()
     ptr = np.ascontiguousarray(unit_ptr, dtype=np.int64)
     values = np.ascontiguousarray(resid, dtype=np.float64)
-    if values.shape != (z_csr.shape[0],) or ptr[-1] != z_csr.shape[0]:
+    if values.shape != (shape[0],) or ptr[-1] != shape[0]:
         raise ValueError("resid and unit_ptr must cover exactly the rows of z")
     if ptr[0] != 0 or np.any(np.diff(ptr) < 0):
         raise ValueError("unit_ptr must start at 0 and not decrease")
-    out = np.zeros((ptr.size - 1, z_csr.shape[1]))
-    _unit_moments_kernel(
-        z_csr.indptr.astype(np.int64), z_csr.indices.astype(np.int64), z_csr.data, values, ptr, out
-    )
+    out = np.zeros((ptr.size - 1, shape[1]))
+    _unit_moments_kernel(indptr, indices, data, values, ptr, out)
     return out

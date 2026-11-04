@@ -33,6 +33,9 @@ def _check_frame(
 ) -> None:
     """Raise unless the keys of the estimation rows are those of the frame (Stata: rc 459)."""
     # Stata: data signature of predict (xtdpthresh_p.ado:132-165); here the keys only
+    if data.source_row.size and int(np.max(data.source_row)) >= len(frame):
+        # fewer rows than the estimation used: the data are not the ones of the fit
+        raise DataError(message("predict_data_changed"), stata_code=459, key="predict_data_changed")
     panel = build_panel(frame, [], id=id, time=time)
     position = np.empty(len(frame), dtype=np.int64)
     position[panel.source_row] = np.arange(panel.source_row.size)

@@ -7,6 +7,7 @@ translated or reworded without touching the code that raises it.
 from __future__ import annotations
 
 from ._config import get_options
+from ._i18n_extras import EXTRA_MESSAGES
 from ._i18n_spec import SPEC_MESSAGES
 from ._types import Lang
 
@@ -62,9 +63,10 @@ _CATALOGUE: dict[str, dict[str, str]] = {
     },
     "time_not_integer": {
         "en": "The time variable '{name}' must hold whole numbers (periods spaced by 1, e.g. "
-        "years); found {example}. Convert dates to period numbers first.",
+        "years); found {example} at row {row}{unit}. Convert dates to period numbers first.",
         "fr": "La variable de temps « {name} » doit contenir des entiers (périodes espacées de "
-        "1, par exemple des années) ; trouvé {example}. Convertissez d'abord les dates en "
+        "1, par exemple des années) ; trouvé {example} à la ligne {row}{unit}. Convertissez "
+        "d'abord les dates en "
         "numéros de période.",
     },
     "column_not_numeric": {
@@ -99,6 +101,7 @@ _CATALOGUE: dict[str, dict[str, str]] = {
     },
 }
 _CATALOGUE.update(SPEC_MESSAGES)
+_CATALOGUE.update(EXTRA_MESSAGES)
 
 
 def message(key: str, lang: Lang | None = None, **fields: object) -> str:

@@ -1,0 +1,659 @@
+% Methodological note of pyxtdpthresh: Appendix A of the user guide.
+% Inserted before the end of the document by tools/build_guide_pdf.py, which also replaces the
+% line that includes ported_functions.tex by the tables generated from docs/ported_functions.md.
+\clearpage
+\setcounter{secnumdepth}{3}
+\appendix
+\providecommand{\E}{\operatorname{E}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\bZ}{\mathbf{Z}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\diff}{\Delta}
+\newcommand{\statasrc}[1]{\texttt{\detokenize{#1}}}
+
+\section{Methodological note}\label{app:note}
+
+This appendix is the methodological note of the package. It states what the two estimators
+compute (Sections~\ref{note:model}--\ref{note:var}), how the package computes it and why it is
+fast (Section~\ref{note:cumsum}), how the bootstrap inference is organised
+(Section~\ref{note:boot}), where it departs from the algorithm of Gong and Seo
+(Section~\ref{note:gs}), what \texttt{xthenreg} adds (Section~\ref{note:xthenreg}), which conventions of the
+Stata commands are reproduced on purpose (Section~\ref{note:quirks}), what has been compared with Stata and how
+(Section~\ref{note:valid}), and where every Stata function went (Section~\ref{note:map}).
+
+Three kinds of statements are mixed and kept apart in the text. A \emph{model} statement comes from
+the papers the commands implement (Seo and Shin 2016; Seo, Kim and Kim 2019; Gong and Seo 2026;
+Nguyen and Lai 2026). A \emph{convention} is a behaviour of the Stata code that the package
+reproduces so that the numbers agree; Section~\ref{note:quirks} lists them. An \emph{implementation}
+statement says how the package obtains a result and is checked by tests, not by a theorem.
+Nothing here claims more theory than the papers prove: where a scheme is an approximation that the
+theory does not cover, the text says so.
+
+\subsection{Notation}\label{note:notation}
+
+\begin{longtable}{@{}p{2.6cm}p{13.4cm}@{}}
+\toprule
+Symbol & Meaning \\
+\midrule
+\endhead
+$i=1,\dots,n$ & units (the clusters of the variance and of the bootstrap); $n$ is \code{e(N_units)} \\
+$e$ & one transformed equation: a unit and a period. There are $N$ of them, \code{e(N)}, stacked by unit then period \\
+$y_{it}, x_{it}, q_{it}$ & dependent variable, the $k$ regressors (the lag of $y$ first, in the dynamic model) and the threshold variable \\
+$\gamma$ & the threshold; $\Gamma$ is the grid of candidates, $G$ its size \\
+$\mathcal T$ & the transformation (first differences or forward orthogonal deviations) as a sparse matrix that maps the \emph{level} observations to the $N$ equations \\
+$\theta=(\beta',\delta')'$ & coefficients; $p=2k+1$ in the jump model, $p=k+1$ in the kink model \\
+$\bX(\gamma)$ & transformed regressors at $\gamma$: $\mathcal T\,[\,x,\ \ind(q>\gamma),\ x\,\ind(q>\gamma)\,]$ (jump) or $\mathcal T\,[\,x,\ (q-\gamma)\ind(q>\gamma)\,]$ (kink) \\
+$\bZ$ & the $N\times L$ instrument matrix; $z_e$ is its row $e$ \\
+$D(\gamma)$, $m_y$ & $D(\gamma)=\bZ'\bX(\gamma)/N$ ($L\times p$) and $m_y=\bZ'\,\mathcal T y/N$ ($L$) \\
+$g_i(\theta,\gamma)$ & moment contribution of unit $i$: $\sum_{e\in i} z_e\,(\mathcal T y_e-\bX_e(\gamma)'\theta)$ \\
+$W_1,\ W_2$ & weight matrices of the first and second step \\
+$Q(\theta,\gamma)$ & criterion $N\,\bar g'\,W\,\bar g$ with $\bar g=m_y-D(\gamma)\theta$ \\
+\bottomrule
+\end{longtable}
+
+Stata counts the stacked equations $N$ in \code{e(N)} and the units in \code{e(N_units)}; the note
+follows that. (The papers write $n$ for the units and index the moments by period.)
+
+\subsection{Model and moment conditions}\label{note:model}
+
+The commands fit the single-threshold dynamic panel model of Seo and Shin (2016),
+\begin{equation}\label{eq:jump}
+y_{it}=x_{it}'\beta+(1,x_{it}')\,\delta\;\ind(q_{it}>\gamma)+\eta_i+\varepsilon_{it},
+\end{equation}
+where $x_{it}$ contains $y_{i,t-1}$ unless the model is static. The regression function jumps at
+$\gamma$ by $\delta_1+x'\delta_2$. With \code{kink}, continuity is imposed,
+\begin{equation}\label{eq:kink}
+y_{it}=x_{it}'\beta+\delta_q\,(q_{it}-\gamma)\,\ind(q_{it}>\gamma)+\eta_i+\varepsilon_{it},
+\end{equation}
+and $q$ should be a regressor so that it has a slope below $\gamma$. The unit effect $\eta_i$ is
+removed by a transformation.
+
+\paragraph{First differences.} The equation of unit $i$ at period $t$ exists when the unit has rows
+at the calendar periods $t$ and $t-1$ (a gap in the dates gives no equation) and both are in the
+equation sample and complete in $y$, $q$ and the regressors. It is $y_t-y_{t-1}$ on
+$x_t-x_{t-1}$, and touches two level observations with weights $+1$ and $-1$.
+
+\paragraph{Forward orthogonal deviations.} An equation row followed by $T_f\ge1$ later equation rows of
+the same unit is $c\,(y_t-\overline{y}_{\text{later}})$ with $c=\sqrt{T_f/(T_f+1)}$ and the same for
+every regressor; the dates of the later rows do not matter, and the last row of a unit has no
+equation. In weights: $+c$ on the row, $-c/T_f$ on each later row.
+
+\paragraph{Triplets.} Both transformations are stored as triplets (equation, level observation,
+weight), i.e.\ as a sparse matrix $\mathcal T$ with two entries per row for first differences. The
+regime regressors depend on $\gamma$ through the level observations only, so $\bX(\gamma)$ is the
+transform of the level regressors $[x,\ \ind(q>\gamma),\ x\,\ind(q>\gamma)]$: the regressors at any
+threshold come from one sparse product, and the equations are never restacked. This is what makes
+the cumulative-sum algorithm of Section~\ref{note:cumsum} possible.
+
+\paragraph{Instruments.} The vector $z_e$ of an equation at period $t$ contains (Arellano and Bond 1991;
+Roodman 2009), each in its own block of columns per period unless \code{collapse}:
+a constant; under first differences the levels $y_{t-2},y_{t-3},\dots$; the transformed strictly
+exogenous regressors; the lagged levels of the endogenous regressors from $t-2$ and of the
+predetermined regressors from $t-1$; and the external instruments dated $t$. Under forward
+orthogonal deviations the dates are one period later, since the transformed error involves later
+periods. \code{maxlag(lo hi)} bounds the lags, the minimum being 2 for $y$ and the endogenous
+variables and 1 for the predetermined ones. With \code{collapse} the per-period blocks are replaced
+by one shared block (one column per lag instead of one per lag and period). An equation without an
+instrument other than the constant is dropped. The instrument matrix does not depend on $\gamma$.
+
+Columns that carry no information are then removed, in the order of the Stata command:
+(1)~columns that are multiples of the period constants (a variable common to all units in a period)
+are zeroed; (2)~columns that are exactly zero are dropped; (3)~exact duplicates are dropped, the
+first kept; (4)~columns that are linear combinations of the earlier ones are dropped (squared
+relative residual below $10^{-13}$). The counts are \code{e(N_iv_common)}, \code{e(N_iv_dep)} and
+\code{e(N_iv_dep_near)}.
+
+\paragraph{Moment conditions.} With $T(\cdot)$ the chosen transformation, the estimator uses
+$\E[z_e\,\mathcal T(\varepsilon)_e]=0$. The sample moment is
+$\bar g(\theta,\gamma)=m_y-D(\gamma)\theta$ and the criterion is
+$Q(\theta,\gamma)=N\,\bar g'W\bar g$.
+
+\paragraph{Time effects.} With \code{td} the transformed period dummies are partialled out of the
+transformed $y$, regressors and instruments (Frisch--Waugh--Lovell). Under first differences the
+transformed dummy of a period is the same for every unit, so the projection is exact demeaning within
+the period; a period with one equation is demeaned to zero and its row is dropped. Under forward
+orthogonal deviations the dummies receive the same transform as the data and the system is projected
+on them with a generalised inverse (\code{invsym}); a row that the projection saturates is dropped.
+The projections $M$ are symmetric and idempotent, so $(M\bZ)'\,d\bX=\bZ'\,M\,d\bX$ and the regime
+moments are formed from the projected instruments and the unprojected level regressors.
+
+\subsection{Estimation}\label{note:est}
+
+\paragraph{Closed form at a threshold.} For a weight matrix $W$ and a given $\gamma$ the criterion is
+quadratic in $\theta$, so
+\begin{equation}\label{eq:theta}
+\hat\theta(\gamma)=\bigl(D'WD\bigr)^{-1}D'W\,m_y,\qquad
+\bar g=m_y-D\hat\theta,\qquad Q=N\,\bar g'W\bar g .
+\end{equation}
+The inverse is Mata's \code{invsym}, or the gated \code{syminv} of \code{xtdpthresh}
+(Section~\ref{note:quirks}): a singular normal matrix is not an error but a candidate that is not
+admissible.
+
+\paragraph{First step.} $\theta_1$ and $\gamma_1$ minimise $Q$ over the grid with $W_1$. Under first
+differences $W_1$ is the MA(1) weight of Arellano and Bond (1991): the transformed errors of
+consecutive equations of a unit overlap in one term, so with $S_0=\bZ'\bZ/n$ and
+$S_1=n^{-1}\sum_i\sum_t z_{i,t-1}z_{it}'$ over consecutive equations of the same unit,
+\begin{equation}\label{eq:w1}
+W_1=\bigl(2S_0-S_1-S_1'\bigr)^{-1}.
+\end{equation}
+If that matrix cannot be inverted, $(\bZ'\bZ)^{-1}$ is used, then the identity
+(\code{e(W1_fallback)} $=1$ or $2$). Under forward orthogonal deviations $W_1=(\bZ'\bZ/N)^{-1}$.
+
+\paragraph{Second step.} With the first-step residuals $r_1$ at $(\theta_1,\gamma_1)$, the cluster
+covariance of the moments is
+\begin{equation}\label{eq:omega}
+\Omega=\frac1N\sum_{i=1}^n g_ig_i'-\frac{1}{nN}\Bigl(\sum_i g_i\Bigr)\Bigl(\sum_i g_i\Bigr)',
+\end{equation}
+the second term being dropped under \code{nocenter}. $W_2=\Omega^{-1}$ is built \emph{once}, from the
+first-step estimate, and then \emph{held fixed} while the second-step criterion is evaluated at every
+other threshold; $\hat\gamma$ minimises that criterion over the grid, with ties going to the smaller
+threshold (relative tolerance $10^{-12}$). This is what the Stata search does, and it is why the
+criterion of every candidate can be computed from sufficient statistics.
+
+\paragraph{One-step fallback.} If $\Omega$ cannot be inverted, no candidate can be solved with $W_2$,
+or the criterion does not vary over the admitted candidates of the second step, the first-step
+estimates are reported with the sandwich of $W_1$ (\code{e(estimator_twostep)} $=0$) and without
+Hansen's $J$. If the first-step criterion itself is flat, the command stops with return code 498.
+
+\paragraph{The grid.} The effective support of $q$ is the set of $q$ values of the level observations
+that enter a stacked equation (periods $t$ and $t-1$ under first differences); \code{gridsample(observed)}
+keeps the current-row values only. The trimming bounds are the type-7 quantiles at
+\code{trim}/2 and $1-$\code{trim}/2. A uniform grid has equally spaced points between the bounds;
+a quantile grid places them on the empirical quantiles (duplicates collapsed). A candidate is
+admitted when both regimes have at least $m$ observations, where the default floor is
+$m=\max\{2,\min(\#\{q\le q_{lo}\},\#\{q>q_{hi}\})\}$ and \code{minregime} can only raise it, and when
+there are more instruments than parameters. At least 20 equations, 5 units and 20 usable values of
+$q$ are required. The grids of 100, 199 and 397 uniform points are nested ($g\to2g-1\to4g-3$), so
+a finer grid is a direct check.
+
+\paragraph{Refinement.} Under \code{kink} the criterion is continuous in $\gamma$, and $\hat\gamma$
+minimises it between the two grid points next to the grid minimum: up to 8 rounds of 40 and then 10
+trial points, shrinking the bracket until its spacing is below $10^{-6}$ of its width
+(\code{e(kink_refined)}). Under the jump model \texttt{refine(\#)} adds the observed values of $q$
+between the neighbours of the minimiser, in at most \# rounds, and re-minimises the second-step
+criterion with the same fixed $W_2$; the confidence set and the tests keep using the initial grid.
+
+\subsection{Cumulative sums: the criterion on a whole grid in one pass}\label{note:cumsum}
+
+Only the regime columns of $\bX(\gamma)$ depend on $\gamma$. For instrument $j$ and level regressor
+$k$ the regime moment is
+\begin{equation}\label{eq:S}
+S_{jk}(\gamma)=\sum_{e}\bZ_{ej}\sum_{(l,w)\in e} w\,W_{lk}\,\ind(q_l>\gamma),
+\end{equation}
+where the inner sum runs over the level observations $l$ of equation $e$ with their weights $w$
+(for the jump model $W_l=(1,x_l)$). Sort the grid, $\gamma_1<\dots<\gamma_G$, and let
+$m_l=\#\{g:\gamma_g<q_l\}$. Then $\ind(q_l>\gamma_g)=1$ exactly when $g\le m_l$, so each term
+$c=\bZ_{ej}\,w\,W_{lk}$ contributes to the first $m_l$ grid points and to no other. The kernel adds
+each contribution \emph{once}, to the bucket $m_l$, and a reverse cumulative sum over the buckets
+gives every grid point:
+\begin{equation}\label{eq:cumsum}
+A[m]=\sum_{\{p:\,m_p=m\}}c_p,\qquad S(\gamma_g)=\sum_{m\ge g}A[m].
+\end{equation}
+The cost is $O(P\cdot\mathrm{nnz}\cdot K+G\,L\,K)$, with $P$ the number of pairs and $\mathrm{nnz}$
+the number of non-zero entries of an instrument column, against $O(G\,P\,\mathrm{nnz}\,K)$ if each
+threshold were recomputed. The kernel runs over instruments (one Numba thread owns the slice
+$S[:,j,:]$), reads $\bZ$ in compressed-column form so that the block-sparse layout costs nothing, and
+places a missing $q$ in bucket 0, so that it is never above the threshold.
+
+For the kink model the regime column is $(q-\gamma)\ind(q>\gamma)=q\,\ind(q>\gamma)-\gamma\,\ind(q>\gamma)$,
+so the same pass with level columns $(1,q)$ gives $S_\kappa(\gamma)=S_q(\gamma)-\gamma\,S_1(\gamma)$.
+The full matrix is $D(\gamma_g)=[\,\bZ'\bX_{\text{lin}}/N\ \big|\ S(\gamma_g)/N\,]$, the first block
+being the same at every threshold.
+
+\paragraph{Solving the whole grid.} Given $D(\gamma_g)$ for all $g$, the estimates (\ref{eq:theta}) are
+batched matrix products (BLAS) and one batched \code{invsym}; this step is dominated by dense algebra
+and is plain NumPy. On the $565\times15$ panel the regime moments of 100 grid points take 4~ms
+against 278~ms for the straightforward reference implementation that is kept for the equivalence
+tests (block~C of the project plan), and the two agree to $10^{-12}$. At realistic sizes the
+remaining time is in the bootstrap (Section~\ref{note:boot}), whose criterion is one matrix product
+that already runs close to the speed of the machine, which is why no further algebraic gain exists
+there: an idea of sharing the unrestricted fit across candidates was examined and rejected because the
+residual depends on the candidate.
+
+\paragraph{Unit moments.} $g_i=\sum_{e\in i}z_e r_e$ is a segmented sum over the CSR layout of $\bZ$
+(one kernel). Units without equations are zero rows and change nothing in (\ref{eq:omega}).
+
+\subsection{Variances and specification tests}\label{note:var}
+
+\paragraph{Robust sandwich.} For a fixed weight $A$ (efficient or not), with $D=\bZ'\bX/N$ and
+$B=(D'AD)^{-1}$,
+\begin{equation}\label{eq:sandwich}
+\widehat V=\frac1N\,B\,D'A\,\Omega\,A D\,B,
+\end{equation}
+with $\Omega$ rebuilt from the residuals at the reported estimate. It is valid for the one-step
+estimator too. This is the variance \emph{conditional on $\hat\gamma$}.
+
+\paragraph{Joint variance with the threshold.} Following Seo and Shin (2016) the threshold is one more
+parameter. The Jacobian is augmented to $[\,D\ |\ \bZ'x_\gamma/N\,]$, where $x_\gamma$ is the
+derivative of the transformed residual with respect to $\gamma$, and the $\theta$ block of the
+sandwich of the augmented system is reported. In the jump model the sample moment is a step function
+of $\gamma$, so the derivative of its expectation is smoothed by a Gaussian kernel,
+\begin{equation}\label{eq:xg}
+x_\gamma=-\,\mathcal T\Bigl[\varphi_h(q-\hat\gamma)\,(\hat\delta_1+x'\hat\delta_2)\Bigr],\qquad
+h=c\cdot1.06\cdot s_q\cdot n^{-1/5},
+\end{equation}
+with $\varphi_h(u)=\varphi(u/h)/h$, $s_q$ the standard deviation of $q$ over all level observations,
+$n$ the number of units with an equation and $c=$ \code{bwscale} (1.5 by default, as in
+\code{xthenreg}). In the kink model the derivative is analytic, $x_\gamma=-\hat\delta_q\,\mathcal T\,\ind(q>\hat\gamma)$.
+The variance conditional on $\hat\gamma$ is kept (\code{e(V_cond)}); if the joint variance cannot be
+computed, the conditional one is reported (\code{e(joint_vce)} $=0$). The upper-regime slopes are
+$\hat\beta+\hat\delta_2$, with the variance of the linear combination.
+
+\paragraph{Windmeijer correction.} $W_2=\Omega(\theta_1)^{-1}$ depends on the first-step estimate.
+Linearising the second-step estimate in $\theta_1$ (Windmeijer 2005) adds
+$D_j=-B_2G_2'W_2\,[\partial\Omega/\partial\theta_j]\,W_2\bar g_2$, with $B_2=(G_2'W_2G_2)^{-1}$,
+$G_2=D(\hat\gamma)$, $\bar g_2$ the second-step moment residual and $B_1,G_1$ the first-step
+counterparts. The variance is
+\begin{equation}\label{eq:wind}
+\widehat V_W=\frac1N\,M\,\Omega_1\,M',\qquad M=B_2G_2'W_2+[D_1,\dots,D_p]\;B_1G_1'W_1 .
+\end{equation}
+The derivative of $\Omega$ is never formed. With $h_{ij}=\sum_{e\in i}z_ex_{ej}$ and
+$s=\sum_ig_i$, only the product
+$[\partial\Omega/\partial\theta_j]\,v=-\frac1N\sum_i\bigl(h_{ij}\,g_i'v+g_i\,h_{ij}'v\bigr)
++\frac{1}{nN}\bigl(h_j\,s'v+s\,h_j'v\bigr)$ with $v=W_2\bar g_2$ is needed (the last term comes from the
+centring), which costs two products per column instead of an $L\times L$ matrix. The correction is
+computed once at the final estimate; if it cannot be computed or is not positive semidefinite, the
+robust variance is reported (\code{e(vce_applied)} $=0$). Windmeijer derived it for moments linear
+in the parameters; it need not improve the variance for the nonlinear moments of the threshold.
+
+\paragraph{Hansen's $J$.} $J=Q(\hat\theta,\hat\gamma)$ of the second step, referred to $\chi^2$ with
+$L-p-1$ degrees of freedom (the threshold counts as one parameter). Nothing is reported after the
+one-step fallback or when the model is not over-identified.
+
+\paragraph{Arellano--Bond serial correlation.} On the \emph{first-difference} residuals, whatever the
+estimation transformation (the \code{xtabond2} convention), the statistic of order $m$ is
+$\mathrm{AR}(m)=b_0/\sqrt{T_1+T_2+T_3}$ (Arellano and Bond 1991, eq.~8), where, with
+$r_{it}$ the residuals and $u_i=\sum_t r_{it}r_{i,t-m}$,
+$b_0=\sum_iu_i$, $T_1=\sum_iu_i^2$, $T_2=-2\,g'(MAM')^{-1}MA\,s$ and $T_3=g'\widehat V g$. Here
+$g=\sum_e x^*_e\,r_{e,t-m}$ collects the regressors against the lagged residual, $s=\bZ'(r\circ u_{\text{unit}})$
+the instrument moments weighted by the unit sums, $M=\bZ'\bX$ (raw sums) and $\widehat V$ the variance
+of the parameters. With the joint variance the threshold column $x_\gamma$ is a parameter of $g$, $M$ and
+$\widehat V$ (\code{e(ar_joint)} $=1$); the statistics that treat $\hat\gamma$ as known are
+\code{e(ar1_cond)} and \code{e(ar2_cond)}. The p-value is $2\Phi(-|\mathrm{AR}|)$. At least five
+residual pairs, from at least five units, are needed.
+
+\subsection{Bootstrap inference}\label{note:boot}
+
+\paragraph{The wild bootstrap of the command.} Every bootstrap component compares, on each sample, the
+criterion of a \emph{restricted} model with the smallest criterion of the threshold models over the
+initial grid. A sample is $Y^*_b=F+r\,\eta_{i(e),b}$: a fitted part $F$ and the residuals $r$ of the
+restricted fit, multiplied by one weight $\eta_{ib}$ per unit (so the correlation within a unit and
+the heteroskedasticity across units are kept), the same weights for every candidate. Regressors and
+instruments keep their sample values. The weights follow Mammen (1993): $-\phi$ with probability
+$(\sqrt5+1)/(2\sqrt5)$ and $1/\phi$ otherwise, $\phi=(\sqrt5-1)/2$; mean 0, variance 1.
+
+\paragraph{Why it is cheap.} With a fixed weight $W$ the criterion of a candidate $g$ depends on the
+sample only through the moments $m^*=\bZ'Y^*/N$:
+\begin{equation}\label{eq:quad}
+\theta=C_g\,m^*,\quad C_g=(D_g'WD_g)^{-1}D_g'W,\qquad
+J_g(m^*)=N\,{m^*}'\,\bigl[M_g'WM_g\bigr]\,m^*,\quad M_g=I-D_gC_g .
+\end{equation}
+The moments of all samples are $m^*_b=\bZ'F/N+N^{-1}\sum_i\eta_{ib}\,g_i$, where $g_i=\sum_{e\in i}z_er_e$
+is the unit moment of the residuals. No $N\times B$ matrix is ever formed: for $G$ candidates and $B$
+draws, all the criteria are a few batched products of the $G$ matrices
+$Q_g=M_g'WM_g$ ($L\times L$) with the $L\times B$ matrix of moments, in chunks that bound the memory
+(8 million elements for the work array; the $Q_g$ are kept when they fit in 40 million elements and
+the estimates are solved draw by draw otherwise). The bootstrap is 80--92~\% of the time of a full
+run; it is evaluated this way for all draws and candidates at once.
+
+\paragraph{Confidence set (grid bootstrap).} Following Hansen (1999b) and Gong and Seo (2026, \S4.1), the
+set collects the candidates $\gamma_\ell$ that a bootstrap test does not reject. With the weight of
+the reported estimator ($W_2$ after a two-step fit, $W_1$ after the fallback), for each candidate:
+(1)~restricted fit $\hat\theta(\gamma_\ell)$ and residuals $e$; (2)~statistic
+$D_n(\gamma_\ell)=Q(\hat\theta(\gamma_\ell),\gamma_\ell)-m_n$, where $m_n$ is the minimum of
+$Q(\hat\theta(\gamma),\gamma)$ over $\Gamma\cup\{\gamma_\ell\}$ (so $D_n(\hat\gamma)=0$);
+(3)~draws $Y^*_b=\bX(\gamma_\ell)\hat\theta(\gamma_\ell)+\eta_{ib}e$; (4)~$D^*_{n,b}(\gamma_\ell)=J_\ell(m^*_b)-\min\{J_\ell(m^*_b),\min_{g\in\Gamma}J_g(m^*_b)\}$;
+(5)~accept $\gamma_\ell$ iff $D_n(\gamma_\ell)$ does not exceed the order statistic of rank
+$k=\lceil p\,(B+1)\rceil$ of the $D^*_{n,b}$, with $p=$ \code{level}/100. That is the add-one rule:
+the bootstrap p-value $(1+R)/(1+B)$, $R=\#\{D^*\ge D\}$, exceeds $1-p$. If $k>B$ no draw can reject and
+every candidate is accepted. The set is the union of the accepted candidates; \code{e(ci_nseg)}
+counts its segments and \code{e(gamma_lo)}, \code{e(gamma_hi)} are the hull, which contains rejected
+values when there are several segments. A candidate whose restricted fit cannot be solved is not
+admissible (status 3); a draw that gives no valid statistic leaves the candidate unresolved
+(statuses 4--6), and then no set is reported (\code{e(ci_incomplete)} $=1$). A statistic exactly zero
+is accepted mechanically (status 2).
+
+\paragraph{Linearity test.} $H_0:\delta=0$. The statistic is the one-step criterion of the linear model
+minus the smallest one-step criterion of the threshold model over the initial grid, both with $W_1$;
+samples are drawn from the linear fit; the p-value is $(1+R)/(1+B)$, and is missing if any draw is invalid.
+This GMM distance test differs from the sup-Wald test of \code{xthenreg}.
+
+\paragraph{Test of a given threshold.} \texttt{citest(\#)} is one row of the grid bootstrap at $\gamma=\#$,
+with its own seed, so asking for it changes no other result; its p-value is $(1+R)/(1+B)$ and its
+decision is $D\le$ crit.
+
+\paragraph{Continuity test.} Following Gong and Seo (2026, \S3.2 and \S4.3) with
+$\tilde\theta=\arg\min_{\Theta_c}\hat Q_n$ the continuity-restricted estimator, the statistic is the
+distance $T_n=N(Q(\tilde\theta)-Q(\hat\theta))$ between the kink and the jump criteria. The package computes
+it over the initial grid with the common weight, draws samples from the kink fit with the \emph{jump}
+residuals reweighted by unit, and takes the p-value $(1+R)/(1+B)$ of $T^*_n=\min_{\text{kink}}J^*-\min_{\text{jump}}J^*$.
+It needs $q$ as a contemporaneous regressor, otherwise the kink model is not nested in the jump model.
+
+\paragraph{Coefficient bootstrap (legacy).} \code{coef_boot} re-runs the whole search in each draw: samples
+$Y^*=\bX(\hat\gamma)\hat\theta+r\eta$, the threshold searched again over the estimation grid with $W_1$, $\theta$
+re-estimated there (two-step: $W_2^*$ from the draw's residuals, threshold searched again). The intervals are
+$\hat\theta_j\pm q_{1-\alpha}(|\theta^*_j-\hat\theta_j|)$ (symmetric) or the percentiles
+$q_{\alpha/2},q_{1-\alpha/2}$ of $\theta^*_j$. Section~\ref{note:gs} says why this is not the coefficient
+bootstrap of Gong and Seo.
+
+\paragraph{Unit resampling.} \code{boot_type="unit"} follows the structure of Algorithm 1
+(Section~\ref{note:gs}). A resample is a vector of unit counts, so every quantity is a sum over units of
+per-unit cross products that do not depend on the draw: $\bZ'\bX(\gamma_g)$ of each grid point, $\bZ'y$ and the
+unit moments; a draw costs a few small products and no pass over the $N$ equations. Per draw: the
+first-step coefficients of every grid point with $W_1$ of the sample, the best one giving the residuals whose
+recentred cluster covariance defines $W_2^*=\Omega^{*-1}$; then the criterion at the candidate (restricted)
+and at every grid point (unrestricted) with $W_2^*$. A draw whose profile has no usable minimum is skipped,
+not replaced.
+
+\paragraph{Random numbers.} Stata 17 uses the 64-bit Mersenne Twister; \code{set seed s} starts it with
+\code{init_genrand64(s)}, and a draw is $u=((x\gg11)\,|\,1)\cdot2^{-53}$, where $x$ is the next 64-bit output
+(measured on 10\,000 draws from five seeds: identical). A matrix is filled row by row;
+\code{uniform()}, \code{runiform()} and \code{invnormal(uniform())} consume one stream. The package reproduces
+the stream, so the same seed gives the same weights as the command. With \code{rseed(s)} each component restarts
+at $(s+\text{offset})\bmod2^{31}$: confidence set $0$, linearity $104\,729$, continuity $224\,737$, coefficient
+$350\,377$, \code{citest} $477\,377$. The weights of a component are drawn replication after replication,
+one uniform per contributing unit. Without a seed one random seed is drawn and the components share a
+stream in the order they run. The Python wrapper always records a seed (Section~\ref{note:quirks}).
+
+\subsection{Gong and Seo's Algorithm 1 and what the package does}\label{note:gs}
+
+This section is the reading of Gong and Seo (2026), Algorithm~1 and \S\S4.1--4.3 (Theorems 5--7), against the code.
+The proofs were not re-derived; the comparison is of the algorithms, and the statements about validity are the
+paper's.
+
+\paragraph{The algorithm of the paper.} For a parameter $\theta^*_0=(\beta^{*\prime}_0,\delta^{*\prime}_0,\gamma^*_0)'$ that
+generates the bootstrap data:
+\begin{enumerate}
+\item draw $i^*$ i.i.d.\ uniformly from $\{1,\dots,n\}$ and resample the units \emph{jointly}:
+$(x^*_{it},x^*_{it-1},z^*_{it},\widehat{\Delta\epsilon}^*_{it})=(x_{i^*t},x_{i^*t-1},z_{i^*t},\widehat{\Delta\epsilon}_{i^*t})$,
+with the \emph{unrestricted} residual $\widehat{\Delta\epsilon}_{it}=\Delta y_{it}-\Delta x_{it}'\hat\beta-\ind_{it}(\hat\gamma)'X_{it}\hat\delta$;
+\item generate $\Delta y^*_{it}=\Delta x^{*\prime}_{it}\beta^*_0+\ind^*_{it}(\gamma^*_0)'X^*_{it}\delta^*_0+\widehat{\Delta\epsilon}^*_{it}$;
+\item $g^*_{it}(\theta)=z^*_{it}(\Delta y^*_{it}-\Delta x^{*\prime}_{it}\beta-\ind^*_{it}(\gamma)'X^*_{it}\delta)$;
+\item recentre: $\bar g^*_n(\theta)=\frac1n\sum_i\bigl(g^*_i(\theta)-\bar g_n(\hat\theta)\bigr)$, with
+$\bar g_n(\hat\theta)$ the sample moment of the unrestricted residuals;
+\item $\hat\theta^*_{(1)}=\arg\min\bar g^{*\prime}_n\bar g^*_n$ (identity weight) and
+$W^*_n=\bigl(\frac1n\sum g^*_ig^{*\prime}_i-\bar g^*\bar g^{*\prime}\bigr)^{-1}$ at $\hat\theta^*_{(1)}$;
+\item $\hat Q^*_n(\theta)=\bar g^*_n(\theta)'W^*_n\bar g^*_n(\theta)$ and the bootstrap statistic.
+\end{enumerate}
+Three choices of $\theta^*_0$ give three procedures. The grid bootstrap of the threshold takes
+$\theta^*_0=(\hat\alpha(\gamma_\ell)',\gamma_\ell)'$ (the restricted estimate at the candidate) and
+$D^*_n(\gamma_\ell)=n\bigl(\min_\alpha\hat Q^*_n(\alpha,\gamma_\ell)-\min_\theta\hat Q^*_n(\theta)\bigr)$;
+the set is $\{\gamma\in\Gamma_n:D_n(\gamma)\le\hat F^{*-1}(1-\tau;D^*_n(\gamma))\}$ (eq.~7), which is never empty because
+$D_n(\hat\gamma)=0$. Theorem~5: at $\gamma=\gamma_0$, $D^*_n\to Z_0^2$ with $Z_0=\max(0,Z^*_0)$ if the model is continuous and
+$\to\chi^2_1$ if it is not, so the set is valid whether or not the function is continuous. The coefficient
+bootstrap takes $\theta^*_0=w_n\hat\theta+(1-w_n)\tilde\theta$ with $w_n=\min\{T_n/(\hat Cn^{1/4}),1\}$ and the
+continuity-restricted estimator $\tilde\theta$ (eq.~8), so that the bootstrap Jacobian degenerates fast enough
+under continuity; the intervals are eq.~(9) (percentile) or eq.~(10) (symmetric), Theorem~6, pointwise only. The continuity test
+takes $\theta^*_0=\tilde\theta$ and $T^*_n=n(\min_{\Theta_c}\hat Q^*_n-\min_\Theta\hat Q^*_n)$ (Theorem~7).
+
+\paragraph{Comparison.}
+\begin{longtable}{@{}p{3.1cm}p{6.1cm}p{6.8cm}@{}}
+\toprule
+Step & Gong and Seo, Algorithm 1 & \code{boot_type="wild"} (default) \\
+\midrule
+\endhead
+Resampling & units drawn with replacement; $x,z$ and the residual move together & one Mammen weight per unit multiplies the residuals; $x$ and $z$ keep their sample values \\
+Data-generating process & $\theta^*_0$ and \emph{unrestricted} residuals & restricted fit at the candidate and \emph{restricted} residuals; $\E^*[\eta]=0$, so the null holds without recentring \\
+Recentring & subtract $\bar g_n(\hat\theta)$ & not needed (restricted residuals, mean-zero weights) \\
+Weight in the bootstrap criterion & re-estimated in every draw from a first step with the identity & the sample weight, held fixed ($W_2$, or $W_1$ after the fallback) \\
+Validity & Theorem 5 (continuous or not) & not covered by the theorem; coverage is examined by simulation (Nguyen and Lai 2026) \\
+\bottomrule
+\end{longtable}
+
+\noindent \code{boot_type="unit"} follows the structure instead: whole units resampled (as count vectors),
+restricted coefficients $\hat\theta(\gamma_\ell)$ with the \emph{unrestricted} residuals at $(\hat\theta,\hat\gamma)$, moments recentred at the sample moment
+of those residuals, and $W^*_2$ re-estimated in every draw. One difference is deliberate in the Stata command and
+copied: the first step of each draw uses the sample first-step weight $W_1$ where the paper uses the identity. It
+is available for \code{method="fd"} without \code{kink} or \code{td}, and is much slower. An unbalanced effective
+stack takes the command outside the common-$T$ setting of the theory (Section~\ref{note:map} lists the warning
+that Stata prints and the package does not).
+
+\paragraph{The coefficient bootstrap is not the paper's.} The legacy \code{coef_boot} generates data from
+$\bX(\hat\gamma)\hat\theta$ with reweighted residuals, i.e.\ $\theta^*_0=\hat\theta$, which is the choice $w_n=1$ of
+eq.~(8). That is the right choice when the model is discontinuous; under continuity the paper shows that a
+bootstrap built on $\hat\theta$ is not valid, which is why it proposes $w_n$. The command therefore calls it a
+legacy compatibility feature, \code{coef_boot="gs"} is refused, and the package says so in a note when it is used.
+The symmetric interval is eq.~(10) with $\theta^*_0=\hat\theta$.
+
+\paragraph{What is open.} The comparison above is a reading, not a proof of agreement. The power of the
+rejection of shifted thresholds in the package's Monte Carlo experiments on the designs of Gong and Seo is lower than
+their Table~2 while the coverage of the threshold agrees, and with the self-exciting designs of Seo and Shin
+(2016) the dispersion of the estimated threshold is larger than in their tables, although the extreme estimates are
+identical to Stata's, so they come from the estimator. The cause is not established.
+
+\subsection{\texttt{xthenreg}}\label{note:xthenreg}
+
+\paragraph{Estimator.} The balanced-panel estimator of Seo, Kim and Kim (2019) is the first-difference special
+case of Section~\ref{note:est}: equation periods $t=2,\dots,T$, a block of instruments per period
+(constant, $\diff x_t$ of the plain regressors, the levels $y_1,\dots,y_{t-2}$, the levels of the endogenous
+regressors up to $t-2$, the external instruments), the coefficient order $[\beta\,|\,\delta_1\,|\,\delta]$ for the
+jump and $[\beta\,|\,\kappa]$ for the kink, the first-step MA(1) weight built block by block
+($W_1=(2S_0-S_1-S_1')^{-1}$ with $S_0$ block diagonal, $(1/N)Z_p'Z_p$, and $S_1$ block upper diagonal, $(1/N)Z_{p-1}'Z_p$), and the
+second-step weight from the centred covariance of the unit moments. The grid is uniform between two
+\code{mm_quantile} bounds at \code{trim_rate}/2 and $1-$\code{trim_rate}/2 over all the values of $q$ (default
+\code{trim_rate} $0.4$) and $\hat\gamma$ is the first minimum of the second-step criterion; both steps
+search the grid, the second step with the weight built at the first-step estimate.
+
+\paragraph{Covariance.} Following Seo and Shin (2016, p.~173), with $G=(G_b,G_d,G_r)$ the derivatives of the
+moments with respect to the linear coefficients, the regime coefficients and the threshold,
+\begin{equation}\label{eq:xhcov}
+\widehat V=\frac1N\,\bigl(G'\,\Omega^{-1}\,G\bigr)^{-1},
+\end{equation}
+with the derivative in $\gamma$ computed by the same Gaussian kernel as in (\ref{eq:xg}), bandwidth
+$h=h_0\cdot1.06\cdot N^{-1/5}\cdot\mathrm{sd}(q)$ (\code{h_0(1.5)}), in the jump model, and in closed form for the kink.
+The 95\,\% interval of every coefficient, the threshold included, is the estimate $\pm1.959963984540054\,\mathrm{se}$.
+
+\paragraph{Linearity test.} The Wald statistic of the regime coefficients is computed at every grid point, each time
+with its own two-step estimate and covariance, and the statistic is the supremum over the grid
+(\code{e(sup_wald)} in the package). The p-value is from the fast bootstrap of the paper: the step-two moments of each
+unit are multiplied by a standard normal weight ($\texttt{invnormal(uniform())}$), the one-step estimator is
+re-evaluated with the fixed step-two weight at every grid point, and the Wald form reuses the covariance matrices of the
+sample. The p-value is the \emph{share} of bootstrap suprema above the sample supremum, not the add-one rule of
+\code{xtdpthresh}, so it can be exactly zero; a missing bootstrap statistic counts as exceeding.
+
+\paragraph{Against \texttt{xtdpthresh}.} Under \code{method(fd)} the two commands use the same moment conditions and
+weight matrices and, on the same grid, give the same estimates; the differences are in the trimming default, the
+placement of $q$, the exogenous-regressor instruments (levels in \code{xthenreg}, transformed values in
+\code{xtdpthresh}), the refinement of the kink, the absence of a standard error for $\hat\gamma$ and the GMM-distance
+linearity test of \code{xtdpthresh}. Where the two designs coincide (cases c1, c4 and c5 of the validation) the package
+checks that the two ports agree.
+
+\subsection{Conventions of the Stata commands that are reproduced}\label{note:quirks}
+
+Each row is a behaviour of the Stata code that the package copies so that the numbers agree. The ones marked
+\code{STATA-QUIRK} in the source are the ones where the behaviour is surprising.
+
+\begin{longtable}{@{}p{3.6cm}p{12.4cm}@{}}
+\toprule
+Convention & What is reproduced and why \\
+\midrule
+\endhead
+\code{invsym} &
+Reads only the upper triangle of its argument; a sweep with the pivot on the largest remaining diagonal element; a pivot
+is dropped when it is at most $10^{-9}$ times the \emph{original} diagonal element, at most $9\times10^{-20}$, or negative,
+and its row and column of the result are zero (a generalised inverse). Measured on Stata 17 MP. For a well-conditioned
+positive definite matrix no pivot can be dropped in any order, so a Cholesky factorisation replaces the sweep. \\
+\code{cholinv} &
+Reads only the lower triangle; missing if the factorisation fails or the reciprocal condition number is below $10^{-20}$. \\
+\code{syminv} gate &
+\code{xtdpthresh} admits an inverse only after Jacobi equilibration, a Cholesky factorisation, a condition number of at most
+$10^{12}$ and a check that $CC^{-1}\approx I$. A matrix that fails is a candidate that is not admissible. Validated on
+23 matrices against the Mata source run unchanged. \\
+Tolerances of ties &
+Equal criteria (relative $10^{-12}$ for profiles, $10^{-10}$ for the refinement check) go to the smaller threshold
+(\code{objtol}). \\
+$W_2$ built once &
+The second-step weight is built at the first-step threshold and held fixed over the grid of the second step. \\
+Equal splits, exact zero &
+Two candidates with the same split of the observed values of $q$ give the same regressors; the statistic of the estimated
+threshold must be exactly zero, so the moments of the initial-grid entry with the same split are reused instead of
+summing the arrays in another order (a gap of the order of rounding would otherwise remain). \\
+Order statistic &
+The critical value is the order statistic of rank $\lceil p(B+1)\rceil$, which is the add-one p-value rule; infinite when the
+rank exceeds $B$ (no draw can reject). \\
+Random stream &
+Mersenne Twister 64, $u=((x\gg11)|1)2^{-53}$, row-major fill, component seeds $(s+\text{offset})\bmod2^{31}$, one draw per
+contributing unit (a unit without equation takes no draw, so adding such a unit leaves the draws unchanged). \\
+Unit bootstrap draws &
+A draw whose profile has no usable minimum is skipped, not replaced (\code{STATA-QUIRK}); the missing ones stay missing in
+the result. \\
+\code{dlt_len} in \code{xthenreg} &
+With a kink the Wald block that is tested has \emph{two} entries (the last linear coefficient and the kink
+coefficient) instead of the kink coefficient alone (\code{STATA-QUIRK}); kept so that the statistic equals Stata's. \\
+Signs of $G$ &
+With a kink $G_d$ has the positive sign (unlike the jump model) and $G_r$ uses the indicator of the regime above the
+threshold, as in \code{cov_mat_con_kink} (\code{STATA-QUIRK}). \\
+\code{exogenous()} of \code{xthenreg} &
+An \code{exogenous()} regressor enters with its levels up to $t$, two more lags than an \code{endogenous()} one
+(\code{STATA-QUIRK}); hence 87 moment conditions where \code{xtdpthresh} has 60 instruments for the same data. \\
+\code{boots_p} &
+The share of bootstrap suprema above the sample supremum, a missing one counting as exceeding, as a missing value does in
+Mata; $-1$ when the test is not run. \\
+$h$ and $s_q$ &
+$s_q$ is the sample standard deviation over \emph{all} the level observations and $n$ the units with an equation; the
+1.959963984540054 of the interval is the constant typed in the \code{xthenreg} source. \\
+AR on first differences &
+The serial-correlation tests use first-difference residuals under both transformations. \\
+Time-effect zeroing &
+A column that the projection reduces to rounding noise (below $10^{-10}$ of its size) is set to exactly zero, as Stata does. \\
+\code{if}, missing values &
+A missing value in the condition counts as \emph{true} in Stata; in the package it counts as false, and the rows with a missing
+variable are removed afterwards by the missing-value check, so the sample is the same. \\
+Seed (the package adds) &
+When the bootstrap is on and no seed is given, the wrapper draws one in $[1,2^{31}-1)$ and records it (\code{res.seed}, the
+settings log, the JSON). Stata draws from the current generator and does not report it. \\
+Precision &
+All values are \code{float64}; Stata's operators on \code{float} variables are recomputed in double precision in the command
+(\code{_xdpt_tsdouble}), which a double-precision array makes unnecessary. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Validation journal}\label{note:valid}
+
+\paragraph{Rule.} Every number the package reports must equal Stata 17 MP to four decimals: absolute difference at most
+$5\times10^{-5}$ \emph{or} relative difference at most $10^{-6}$. The comparison is automated and runs without Stata.
+
+\paragraph{Method.} The real commands (\code{xthenreg}, \code{xtdpthresh} 0.9.38) are run in batch from PowerShell; a Mata
+routine exports each object at 15 significant digits; the results are frozen in \code{tests/golden/} (one file per
+component) with the versions of Stata and of the commands. The test suite compares the package with them case by case.
+The random numbers of Stata are reproduced, so a seeded bootstrap draws the very weights of the command and its
+p-values and sets are compared directly, not through their distribution. Each case is described once and drives both the
+Stata run and the Python run.
+
+\begin{longtable}{@{}p{4.3cm}p{2.2cm}p{9.5cm}@{}}
+\toprule
+Object & Cases & Result \\
+\midrule
+\endhead
+Random numbers & 5 seeds & $10\,000$ draws each, identical; $40$ bootstrap suprema of each of 9 \code{xthenreg} cases equal to a relative $2\times10^{-10}$ \\
+\code{invsym}, \code{cholinv}, \code{syminv} & measured; 23 matrices & thresholds measured on Stata; \code{syminv} equal to the Mata source run unchanged \\
+\code{xthenreg}: $L$, $y$, $q$, $x$, $Z$ & 12 & equal to $10^{-12}$ running the Mata source as is (step~1 of \code{maincode_0719}) \\
+\code{xthenreg}: $\hat\theta$, $\hat\gamma$, $V$, CI, $e()$ & c1--c8 and variants & $b$ within $3\times10^{-11}$ worst case on c1--c6; \code{h_0(3)} and \code{h_0(0.7)} (c7, c8) through the public function; grid $\times$ trimming variants (12 jump, 3 kink, 4 on $T=15$ with $L=325$) \\
+\code{xthenreg}: sup-Wald, $p$ & 9; 5 & statistic to a relative $5\times10^{-10}$; the p-values of \code{boost(100)} equal on 5 cases (static and dynamic, jump and kink) \\
+\code{xtdpthresh}: sample selection & 36 & \code{e(N)}, \code{e(N_stack)}, \code{e(N_units)} and the exact set of rows of \code{e(sample)} equal; return codes of the refusals equal \\
+Instruments $Z$, $X$ & 28 + 30 + 15 & default, \code{maxlag}, \code{collapse}, \code{iv()}, duplicates, dependence, common variable; 15 cases of forward deviations \\
+One step, two steps & 28 & \code{e(b)}, \code{e(obj)}, \code{e(V_cond)}; the one-step fallback is reproduced \\
+Grid and search & 29; 5; 3 & \code{e(grid_admitted)}, \code{e(q_lo)}, \code{e(q_hi)}; kink refinement (\code{e(kink_refined)}); \code{refine} (iterations and points added) \\
+Whole commands, full panel & 14 & the examples of the help file and variants on 565 firms: \code{e(b)}, \code{e(gamma)}, \code{e(obj)}, \code{e(N)}, \code{e(N_iv)} \\
+Unbalanced panels, FOD, $td$, history & 5 + 5; 7 + 8; 4 & interior gaps, missing values, short units, alternate years; \code{td} under FD and FOD; \code{history(panel|sample)} \\
+Variances & 45; 23 & \code{e(V)}, \code{e(V_cond)}, \code{e(V_upper)}, \code{e(b_upper)}, jump and kink, FD and FOD, \code{td}, unbalanced; \code{vce(windmeijer)}; \code{bwscale} (0.8, 3), \code{nocenter} \\
+Tests & 45 & \code{e(hansen)}, \code{e(hansen_df)}, \code{e(hansen_p)}, \code{e(ar1)}, \code{e(ar2)} and their p-values \\
+\code{predict} & 11 & residuals, \code{xb}, AR residuals, regime, \code{if} \\
+Bootstrap & 62 Stata cases, 287 checks & \code{e(pval_lin)} (56), \code{e(ci_grid)}, \code{e(gamma_lo)}, \code{e(gamma_hi)}, \code{e(ci_nseg)}, \code{e(ci_segments)}; continuity (8); \code{citest} (8); coefficient bootstrap (10); \code{boottype(unit)}; refusals \\
+Reporting & 146 checks & the tables repeat the validated $b$, $V$, \code{ci_grid}, \code{e(b_upper)} exactly \\
+Hostile inputs & 19 & minimal panels, a constant, binary or rare threshold, an empty regime, duplicated regressors, fewer units than instruments, a null outcome: the same return code as Stata on 19 of 19\\
+\bottomrule
+\end{longtable}
+
+\paragraph{Equivalence of the fast kernels.} Each Numba kernel has a NumPy reference that is kept; the tests compare them to
+$10^{-12}$ (several seeds, ties between $q$ and the grid, a missing $q$, degenerate grids, one against four threads bit for
+bit, and with the compiler switched off). The optimisations of the bootstrap were accepted only when the reference
+cases remained identical.
+
+\paragraph{Suite.} About 2\,170 tests (unit, golden, integration), line and branch coverage about 91.5\,\% (the compiled bodies
+cannot be traced by the coverage tool); the code of the README and of this guide is executed by the tests.
+
+\paragraph{What is not compared with Stata.} The statistical behaviour of the package's own seeds (size and power of the
+linearity test, coverage of the confidence set over many panels) is measured by Monte Carlo and compared with the
+papers, not with Stata, and has the open points of Section~\ref{note:gs}. Timings are measured on the same machine one run
+after the other, because the speed of a machine varies by up to a factor of two from one moment to the next. The statements
+of the guide about interpretation come from the Stata help files, the code and the execution of the package, and are not
+a second validation.
+
+\subsection{Where every Stata function went}\label{note:map}
+
+The inventory is generated by \code{tools/ported_functions.py} from the \texttt{\# Stata: function (file.ado:line)} comments of
+the source and the function ranges of \code{validation/stata_functions.json} (a manifest with the SHA-256 of the three
+\code{.ado} files); a test checks that every citation points inside a function. A function counts as \emph{ported} when
+at least one comment points inside it. At the time of writing, 86 of the 101 functions of the three files are cited; the generated
+tables below list the cited ones and where they live. The 15 that are not cited fall in three groups.
+
+\begin{longtable}{@{}p{3.7cm}p{3.0cm}p{9.3cm}@{}}
+\toprule
+Stata function & Status & Reason \\
+\midrule
+\endhead
+\code{xdpt2_append_nested_level}, \code{xdpt2_nested_midpoints}, \code{xdpt2_profile_stability} &
+retired &
+Reachable only when \code{search_mode == "adaptive"}, which the command refuses since 0.9.26 (\code{search_mode}, \code{search_max} and
+\code{search_tol} are retired). The package evaluates the grid it is asked for; the nested grids $g\to2g-1\to4g-3$ are reached by choosing
+\code{grid=199} or \code{397}. \\
+\code{xdpt2_build_gamma_cache} &
+dead code &
+No caller in the command; the variant \code{xdpt2_build_gamma_cache_t} is the one in use and is ported (the cache of the candidates). \\
+\code{xdpt2_tpl_build}, \code{xdpt2_tpl_dW}, \code{xdpt2_tpl_release}, \code{xdpt2_unit_cfg} &
+replaced &
+The Mata record of the stacked-equation template, its release and the settings read once per stack. The package keeps the
+transformation as the sparse matrix $\mathcal T$ (Section~\ref{note:model}) and the instrument settings as a dataclass, so none of this
+bookkeeping exists; the quantities they produce are the ones compared with Stata. \\
+\code{xdpt2_hasmiss} &
+not needed &
+Tests for a missing value in a block; the package uses \code{np.isfinite}. \\
+\code{_xdpt_tsdouble} &
+not needed &
+Recomputes the time-series operators in double precision (\code{tsrevar} keeps the type of the source); all values are \code{float64}. \\
+\code{xdpt2_rowsig2} (in \code{xtdpthresh.ado} and in \code{xtdpthresh_p.ado}), \code{xdpt2_p_fill} of \code{xtdpthresh_p.ado} &
+replaced &
+A checksum of the data and a keyed store that let \code{predict} detect a changed dataset or a cleared memory (return codes 459 and
+498). The result object holds its data and \code{predict(kind, frame)} checks the keys of the frame it is given; the copy of
+\code{xdpt2_p_fill} in \code{xtdpthresh.ado} is ported. \\
+\code{xdpt2_is_strongly_balanced} &
+message not ported &
+Used to print, when \code{boottype(unit)} runs on an unbalanced effective stack, ``this is an experimental extension beyond the
+common-$T$ theory'', and to store a balance flag. The package does not print that warning; the estimates are unaffected. \\
+\code{xdpt2_near_common} &
+message not ported &
+Names, in the error message of a rank failure, the variables that are common to all units only up to rounding. The package raises
+the same error with the same return code but without that hint. \\
+\bottomrule
+\end{longtable}
+
+\noindent The 19 functions that were not cited before this note was written are now cited where the package implements their role
+(for example \code{xdpt2_gsum_by_unit} by the unit-moment kernel, \code{xdpt2_kink_joint_V} and
+\code{xdpt2_kink_joint_wind} by the joint variance, \code{xdpt2_fast_gmm_boot} by the batched bootstrap criterion,
+\code{FD_con}, \code{cov_con_b} and \code{cov_con_kink_b} of \code{xthenreg} by the first differences and the Wald
+covariance of the linearity test).
+
+\input{ported_functions.tex}
+
+\subsection*{References}
+
+\begin{description}\small
+\item[Arellano, M., and S. Bond (1991).] Some tests of specification for panel data: Monte Carlo evidence and an application to
+employment equations. \emph{Review of Economic Studies} 58: 277--297.
+\item[Arellano, M., and O. Bover (1995).] Another look at the instrumental variable estimation of error-components models.
+\emph{Journal of Econometrics} 68: 29--51.
+\item[Gong, W., and M. H. Seo (2026).] Bootstraps for dynamic panel threshold models. \emph{Journal of Econometrics} 253: 106153.
+\item[Hansen, B. E. (1999a).] Threshold effects in non-dynamic panels: estimation, testing, and inference.
+\emph{Journal of Econometrics} 93: 345--368.
+\item[Hansen, B. E. (1999b).] The grid bootstrap and the autoregressive model. \emph{Review of Economics and Statistics} 81: 594--607.
+\item[Mammen, E. (1993).] Bootstrap and wild bootstrap for high dimensional linear models. \emph{Annals of Statistics} 21: 255--285.
+\item[Nguyen, D. C., and N. D. Lai (2026).] xtdpthresh: dynamic panel threshold regression for unbalanced panels, with endogenous
+regressors and continuity-robust inference. SSRN Working Paper 6619058.
+\item[Roodman, D. (2009).] How to do xtabond2: an introduction to difference and system GMM in Stata. \emph{Stata Journal} 9: 86--136.
+\item[Seo, M. H., S. Kim, and Y.-J. Kim (2019).] Estimation of dynamic panel threshold model using Stata. \emph{Stata Journal} 19: 685--697.
+\item[Seo, M. H., and Y. Shin (2016).] Dynamic panels with threshold effect and endogeneity. \emph{Journal of Econometrics} 195: 169--186.
+\item[Windmeijer, F. (2005).] A finite sample correction for the variance of linear efficient two-step GMM estimators.
+\emph{Journal of Econometrics} 126: 25--51.
+\end{description}

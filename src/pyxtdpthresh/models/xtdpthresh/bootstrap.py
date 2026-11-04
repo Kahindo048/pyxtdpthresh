@@ -17,7 +17,7 @@ weight ``W2`` after a two-step fit, the first-step criterion with ``W1`` after a
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 
@@ -116,11 +116,14 @@ class LinearityTest:
         Sample distance ``D``.
     n_valid
         Valid draws (``e(boot_linearity_valid)``).
+    draws
+        Bootstrap distances ``D*`` of the valid draws (what the p-value counts against ``D``).
     """
 
     p_value: float
     statistic: float
     n_valid: int
+    draws: FloatArray = field(default_factory=lambda: np.empty(0))
 
 
 def linearity_test(replay: Replay, streams: BootstrapStreams, n_boot: int) -> LinearityTest:
@@ -159,10 +162,11 @@ def linearity_test(replay: Replay, streams: BootstrapStreams, n_boot: int) -> Li
     alternative = _alternative_minimum(criterion(grid, moments, n))
     distance = _distances(restricted, alternative)
     valid = int(np.isfinite(distance).sum())
+    draws = distance[np.isfinite(distance)]
     if valid < n_boot:
-        return LinearityTest(math.nan, statistic, valid)
+        return LinearityTest(math.nan, statistic, valid, draws)
     exceed = int(np.sum(distance >= statistic))
-    return LinearityTest((1 + exceed) / (1 + valid), statistic, valid)
+    return LinearityTest((1 + exceed) / (1 + valid), statistic, valid, draws)
 
 
 # ---------------------------------------------------------------------------------- continuity
@@ -376,6 +380,9 @@ def candidate_moments(
     model only the same threshold qualifies.  The other candidates are computed in one pass.
     """
     # Stata: xdpt2_build_gamma_cache_t recomputes dW per gamma, so equal splits are bit-equal
+    # STATA-QUIRK: the moments of the initial-grid entry with the same split are reused so that the
+    # statistic of the estimated threshold is exactly zero, as in Stata (summing the arrays in
+    # another order would leave a gap of the order of rounding).
     stack, search = replay.stack, replay.search
     initial = search.cache.gammas[: search.n_stage1]
     if stack.kink:
@@ -491,9 +498,11 @@ class _Inversion:
             )
         if not batch:
             return np.full(self.n_boot, np.nan)
-        fitted = stack.regressors(float(self.candidates[index])) @ theta
+        candidate_zw = self.moments[index]
+        assert candidate_zw is not None
+        fitted = stack.fitted(float(self.candidates[index]), theta)
         draws = sample_moments(
-            stack.z.rmatmul(fitted) / n,
+            candidate_zw @ theta,
             contributing_moments(stack, stack.dy - fitted),
             self.weights,
             n,

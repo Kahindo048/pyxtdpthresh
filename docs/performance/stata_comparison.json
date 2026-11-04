@@ -1,0 +1,62 @@
+[
+  {
+    "size": "hansen",
+    "stata_noboot": 3.931,
+    "python_noboot": 0.218799099966418,
+    "ratio_noboot": 17.966253063213436,
+    "stata_boot_cost": 32.302,
+    "python_boot_cost": 2.8288936000317335,
+    "ratio_boot": 11.41859842294445,
+    "stata_total": 36.233,
+    "python_total": 3.0476926999981515,
+    "ratio_total": 11.888665809391469,
+    "stata_range": [
+      32.577,
+      40.542
+    ],
+    "python_range": [
+      2.9273703999933787,
+      3.2592696999781765
+    ]
+  },
+  {
+    "size": "2000",
+    "stata_noboot": 2.762,
+    "python_noboot": 0.1310805999673903,
+    "ratio_noboot": 21.07100517305474,
+    "stata_boot_cost": 14.087,
+    "python_boot_cost": 0.730824800033588,
+    "ratio_boot": 19.27548161933281,
+    "stata_total": 16.849,
+    "python_total": 0.8619054000009783,
+    "ratio_total": 19.548549063482927,
+    "stata_range": [
+      15.665,
+      17.298
+    ],
+    "python_range": [
+      0.8174959000316449,
+      0.9847473000409082
+    ]
+  },
+  {
+    "size": "10000",
+    "stata_noboot": 14.357,
+    "python_noboot": 0.4204934000154026,
+    "ratio_noboot": 34.14322317419038,
+    "stata_boot_cost": 56.848,
+    "python_boot_cost": 1.9411423999699764,
+    "ratio_boot": 29.285847344779686,
+    "stata_total": 71.205,
+    "python_total": 2.361635799985379,
+    "ratio_total": 30.150711638280903,
+    "stata_range": [
+      71.025,
+      72.129
+    ],
+    "python_range": [
+      1.9100968999555334,
+      2.834809200023301
+    ]
+  }
+]

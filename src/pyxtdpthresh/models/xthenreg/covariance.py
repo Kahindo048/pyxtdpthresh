@@ -88,6 +88,8 @@ def covariance(problem: XthenregProblem, fit: TwoStepFit, h_0: float = H_0) -> C
         Multiplier of the kernel bandwidth (jump models only).
     """
     # Stata: cov_mat_con (xthenreg.ado:1532) and cov_mat_con_kink (1594)
+    # STATA-QUIRK: with a kink G_d has the positive sign (unlike the jump model) and G_r uses the
+    # indicator of the regime above the threshold, as in cov_mat_con_kink.
     k = problem.k
     n = problem.n_units
     a_hat = fit.a[fit.second.index]  # A(gamma_hat), (L, n_params)

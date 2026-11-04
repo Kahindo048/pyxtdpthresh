@@ -1,0 +1,58 @@
+\begin{table}[!htbp]
+\centering
+\caption{Dynamic threshold models}
+\label{tab:dpt}
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{4}{c}{\textit{Variable dépendante: invest}} \\
+\cmidrule(lr){2-5}
+ & xtdpthresh FD & xtdpthresh FOD & xtdpthresh kink & xthenreg \\
+\midrule
+\multicolumn{5}{l}{\textit{Régime bas}} \\
+L.invest & 0,306 & 0,197$^{**}$ & 0,257$^{***}$ & 0,083$^{***}$ \\
+ & (0,305) & (0,090) & (0,065) & (0,026) \\
+cashflow & 0,036 & 0,028 & $-$0,029$^{**}$ & $-$0,020$^{**}$ \\
+ & (0,057) & (0,038) & (0,014) & (0,008) \\
+tobin\_q & $-$0,001 & 0,003 & 0,001 & $-$0,001$^{***}$ \\
+ & (0,002) & (0,002) & (0,001) & (0,000) \\
+debt & 0,858 & $-$0,268 & $-$0,215$^{***}$ & 1,070$^{***}$ \\
+ & (0,593) & (0,164) & (0,056) & (0,216) \\
+\multicolumn{5}{l}{\textit{Changement au seuil}} \\
+\_cons & $-$0,037 & 0,181 &  & $-$0,055$^{***}$ \\
+ & (0,192) & (0,153) &  & (0,018) \\
+L.invest & $-$0,082 & 0,076 &  & 0,192$^{***}$ \\
+ & (0,716) & (0,460) &  & (0,043) \\
+cashflow & $-$0,122 & 0,153 &  & 0,158$^{***}$ \\
+ & (0,262) & (0,162) &  & (0,026) \\
+tobin\_q & $-$0,002 & 0,007 &  & 0,001$^{**}$ \\
+ & (0,005) & (0,006) &  & (0,000) \\
+debt & $-$0,676 & $-$0,005 & 0,265$^{***}$ & $-$1,098$^{***}$ \\
+ & (0,679) & (0,214) & (0,072) & (0,219) \\
+\multicolumn{5}{l}{\textit{Régime haut}} \\
+L.invest & 0,224 & 0,273 &  & 0,275$^{***}$ \\
+ & (0,446) & (0,443) &  & (0,029) \\
+cashflow & $-$0,086 & 0,182 &  & 0,138$^{***}$ \\
+ & (0,231) & (0,145) &  & (0,022) \\
+tobin\_q & $-$0,003 & 0,010 &  & 0,000 \\
+ & (0,006) & (0,008) &  & (0,000) \\
+debt & 0,182 & $-$0,273$^{**}$ & 0,051 & $-$0,028 \\
+ & (0,159) & (0,118) & (0,055) & (0,018) \\
+\midrule
+Observations & 6780 & 6780 & 6780 & - \\
+Unités & 565 & 565 & 565 & 565 \\
+Instruments & 25 & 25 & 25 & 90 \\
+J de Hansen (p) & 0,876 & 0,533 & 0,000 & - \\
+AR(1) (p) & 0,000 & 0,001 & 0,000 & - \\
+AR(2) (p) & 0,262 & 0,734 & 0,770 & - \\
+Test de linéarité (p) & 0,007 & 0,017 & 0,110 & - \\
+Seuil $\hat{\gamma}$ & 0,256 & 0,476 & 0,401 & 0,119 \\
+Seuil, intervalle à 95 \% & [0,006, 0,421] & [0,031, 0,537] & [0,293, 0,604] & [0,088, 0,149] \\
+Transformation & FD & FOD & FD & FD \\
+Effet de seuil & saut & saut & kink & saut \\
+Estimateur & deux pas & deux pas & deux pas & - \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize $^{*}$p\textless{}0,1; $^{**}$p\textless{}0,05; $^{***}$p\textless{}0,01} \\
+\multicolumn{5}{l}{\footnotesize Écarts-types entre parenthèses.} \\
+\multicolumn{5}{l}{\footnotesize Intervalle du seuil : grid bootstrap (xtdpthresh) ou asymptotique (xthenreg).} \\
+\end{tabular}
+\end{table}

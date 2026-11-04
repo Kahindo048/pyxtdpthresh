@@ -97,6 +97,7 @@ def make_problem(
 ) -> XthenregProblem:
     """Arrange the sample and the instruments in equation-row form."""
     # Stata: GMM_var_con (xthenreg.ado:1014)
+    # Stata: FD_con (xthenreg.ado:885): the first differences of y and x
     n, t_all = data.n_units, data.n_periods
     first = 1 if static else 0  # the lag-of-y block is not a regressor of the static model
     x = data.x[first:]

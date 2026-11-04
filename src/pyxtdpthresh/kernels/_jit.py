@@ -27,25 +27,41 @@ pjit: Callable[..., Any] = numba.njit(
 prange = numba.prange
 
 
-def apply_threads() -> int:
-    """Apply the ``threads`` option to Numba and return the number of threads in use.
+#: Threads of the Numba kernels.  Their workers keep spinning after a parallel region and take the
+#: cores from the BLAS products that follow: measured on the bootstrap, one kernel thread and all
+#: the cores for BLAS is 1.5 to 1.9 times faster than the Numba default.  The kernels are short
+#: passes over the data; the products are where the time goes.
+KERNEL_THREADS = 1
 
-    ``threads=None`` uses every thread Numba offers; a larger request than Numba allows is capped.
-    """
-    available: int = numba.config.NUMBA_NUM_THREADS  # type: ignore[attr-defined]
-    requested = get_options().threads
-    numba.set_num_threads(available if requested is None else min(requested, available))
+
+def apply_threads() -> int:
+    """Set the Numba threads to :data:`KERNEL_THREADS` and return the number in use."""
+    numba.set_num_threads(min(KERNEL_THREADS, int(numba.config.NUMBA_NUM_THREADS)))  # type: ignore[attr-defined]
     return int(numba.get_num_threads())
 
 
-def set_threads(n: int | None) -> int:
-    """Set the number of threads used by the parallel kernels and return it.
+def available_threads() -> int:
+    """Return the threads BLAS may use: the ``threads`` option, else half of the logical cores.
 
-    ``None`` restores the Numba default.  The value is stored in the package options, so it
-    also applies to kernels called later.
+    Half of the logical cores is the number of physical cores on a machine with two threads per
+    core.  Measured on the bootstrap in fresh processes, all the logical cores make the first fit
+    up to twice as slow as the second (the threads compete with each other), while half of them
+    give the same time at the first and the second fit and the best or nearly the best time.
+    """
+    requested = get_options().threads
+    cores: int = numba.config.NUMBA_NUM_THREADS  # type: ignore[attr-defined]
+    return max(1, cores // 2) if requested is None else min(requested, cores)
+
+
+def set_threads(n: int | None) -> int:
+    """Set the threads the package may use and return how many that is.
+
+    The number bounds the BLAS products (the Numba kernels run on :data:`KERNEL_THREADS`).
+    ``None`` takes half of the logical cores.  The value is stored in the package options, so it
+    also applies to computations started later.
     """
     set_options(threads=n)
-    return apply_threads()
+    return available_threads()
 
 
 _controller: ThreadpoolController | None = None
@@ -53,16 +69,14 @@ _controller: ThreadpoolController | None = None
 
 @contextmanager
 def blas_threads() -> Iterator[int]:
-    """Limit the BLAS threads to half of the Numba threads while a computation runs.
+    """Give the BLAS products the threads of the ``threads`` option while a computation runs.
 
-    The Numba kernels and the BLAS products of NumPy both run on every core; used one after the
-    other they fight for the cores (the OpenMP workers of the kernels keep spinning), and a small
-    matrix product can become 20 times slower than on its own.  Half of the threads for the
-    products keeps both fast.  The limit is lifted when the block ends.
+    The limit is lifted when the block ends.
     """
     global _controller
     if _controller is None:  # scanning the loaded libraries is slow: done once
         _controller = ThreadpoolController()
-    limit = max(1, apply_threads() // 2)
+    apply_threads()
+    limit = available_threads()
     with _controller.limit(limits=limit, user_api="blas"):
         yield limit

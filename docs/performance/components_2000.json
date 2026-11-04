@@ -1,0 +1,13 @@
+{
+  "specification": 0.0003408000338822603,
+  "data": 0.019553299993276596,
+  "stack (instruments, weights)": 0.052677900006528944,
+  "threshold search (grid, step 2)": 0.1802268999745138,
+  "variance": 0.0062618000083602965,
+  "tests (Hansen, AR)": 0.018858400057069957,
+  "bootstrap (linearity + confidence set)": 1.3394447999889962,
+  "total": 1.617363900062628,
+  "n_units": 2000.0,
+  "n_equations": 12000.0,
+  "n_instruments": 27.0
+}

@@ -99,6 +99,7 @@ class ThresholdCache:
 
     def add(self, candidates: FloatArray) -> tuple[int, int]:
         """Append the candidates not yet present; return the range ``[first, last)`` added."""
+        # Stata: xdpt2_append_candidates (xtdpthresh.ado:5275): only never-seen candidates are built
         new = np.unique(candidates[np.isfinite(candidates)])
         new = new[~np.isin(new, self.gammas)]
         if new.size == 0:
@@ -215,6 +216,26 @@ class SearchResult:
     n_stage1: int
     stage2_global_obj: float
 
+    def profile(self) -> tuple[FloatArray, FloatArray]:
+        """Criterion of the reported estimator at each initial-grid threshold.
+
+        Returns the thresholds and the criterion under the weight of the reported estimate (the
+        search of its last step); ``nan`` where the threshold is not admissible or cannot be
+        solved.  At the estimate's threshold it equals ``fit.obj`` when that threshold is on the
+        grid (a kink refinement or ``refine`` may move it off the grid).
+        """
+        gammas = np.asarray(self.cache.gammas[: self.n_stage1], dtype=np.float64)
+        stack, weight = self.cache.stack, self.fit.weight
+        values = np.full(gammas.size, np.nan)
+        for i in range(gammas.size):
+            moments = self.cache.zw[i]
+            if moments is None:
+                continue
+            solved = solve_fixed_weight(moments, stack.zy, weight, stack.n_rows)
+            if solved.ok:
+                values[i] = solved.obj
+        return gammas, values
+
 
 def threshold_support(stack: Stack, observed: bool) -> tuple[FloatArray, FloatArray]:
     """Values of ``q`` that define the grid, and those that define the realised regime split.
@@ -223,6 +244,7 @@ def threshold_support(stack: Stack, observed: bool) -> tuple[FloatArray, FloatAr
     (``t`` and ``t - 1``); ``observed`` keeps only the current-row values, as ``xthenreg`` does.
     """
     # Stata: xdpt2_q_support (xtdpthresh.ado:2744) and gridsample(observed)
+    # Stata: xdpt2_q_at_rows (xtdpthresh.ado:2721): the current-row values of q
     levels = stack.level_support
     split = stack.level_q[levels]
     split = np.unique(split[np.isfinite(split)])

@@ -37,6 +37,7 @@ def row_at_shift(
     span = int(np.max(time)) - t0 + 2 * pad + 1
     key = unit * span + (time - t0 + pad)
     target = key[wanted] - shift
+    # Stata: xdpt2_tpos (xtdpthresh.ado:2690-2702), the lower-bound search on the sorted times
     pos = np.searchsorted(key, target)
     clipped = np.minimum(pos, n - 1)
     found = (pos < n) & (key[clipped] == target)

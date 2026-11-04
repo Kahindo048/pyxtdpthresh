@@ -24,6 +24,7 @@ from pyxtdpthresh.data.checks import (
     as_period_numbers,
     balance_summary,
     check_unique_pairs,
+    unknown_variable,
 )
 from pyxtdpthresh.data.sampling import resolve_where
 
@@ -87,7 +88,7 @@ class Panel:
     def column(self, name: str) -> FloatArray:
         """Values of one column (a view)."""
         if name not in self.names:
-            raise DataError(message("variable_not_found", name=name))
+            raise unknown_variable(name, self.names)
         column: FloatArray = self.values[:, self.names.index(name)]
         return column
 
@@ -146,7 +147,7 @@ class Panel:
 
 def _numeric(frame: pd.DataFrame, name: str) -> FloatArray:
     if name not in frame.columns:
-        raise DataError(message("variable_not_found", name=name))
+        raise unknown_variable(name, frame.columns)
     col = frame[name]
     if not (pd.api.types.is_numeric_dtype(col) or pd.api.types.is_bool_dtype(col)):
         raise DataError(message("column_not_numeric", name=name, dtype=str(col.dtype)))
@@ -160,7 +161,7 @@ def _key_column(frame: pd.DataFrame, name: str | None, level: int) -> tuple[str,
             return name, frame[name].reset_index(drop=True)
         if name in frame.index.names:
             return name, pd.Series(frame.index.get_level_values(name))
-        raise DataError(message("variable_not_found", name=name))
+        raise unknown_variable(name, [*frame.columns, *(n for n in frame.index.names if n)])
     if frame.index.nlevels != 2:
         raise DataError(message("keys_not_found"))
     label = frame.index.names[level] or ("id", "time")[level]
@@ -211,9 +212,9 @@ def build_panel(
 
     codes, labels = pd.factorize(id_series, sort=True)
     unit_code = codes.astype(np.int64)
-    period = as_period_numbers(time_series.to_numpy(), time_name)
-    check_unique_pairs(unit_code, period, id_name, time_name)
-    summary = balance_summary(unit_code, period)
+    period = as_period_numbers(time_series.to_numpy(), time_name, id_series.to_numpy(), id_name)
+    check_unique_pairs(unit_code, period, id_name, time_name, np.asarray(labels))
+    summary = balance_summary(unit_code, period, np.asarray(labels), (id_name, time_name))
 
     data = (
         np.column_stack([_numeric(frame, c) for c in columns])

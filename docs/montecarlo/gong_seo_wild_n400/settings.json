@@ -1,0 +1,19 @@
+{
+  "reps": 200,
+  "n": [
+    400
+  ],
+  "t": 6,
+  "jumps": [
+    0.0,
+    0.1,
+    0.2,
+    0.5,
+    1.0
+  ],
+  "n_boot": 500,
+  "boot_type": "wild",
+  "workers": null,
+  "seed": 2026,
+  "tag": "gong_seo_wild_n400"
+}

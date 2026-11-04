@@ -1,0 +1,52 @@
+Journal des réglages
+
+Échantillon
+  unités avec équations                              565
+  équations (lignes empilées)                        6780
+  unités écartées (moins de deux lignes d'équation)  0
+  historique des retards                             panel entier
+
+Modèle
+  transformation         différences premières
+  effet de seuil         saut
+  dynamique              dynamique (retard de y ajouté)
+  effets temporels (td)  non
+  variable de seuil      debt
+  régresseurs endogènes  cashflow, tobin_q, debt
+
+Instruments et pondération
+  instruments conservés                             25
+  instruments regroupés                             oui
+  instruments externes regroupés                    oui
+  retards des instruments                           3 à 8
+  colonnes retirées : communes à toutes les unités  0
+  colonnes retirées : vides                         0
+  colonnes retirées : doublons                      0
+  colonnes retirées : combinaisons linéaires        0
+  poids de première étape                           MA(1) (différences) ou (Z'Z)^-1 (déviations)
+  estimateur                                        GMM en deux étapes
+
+Recherche du seuil
+  grille de seuils                 uniforme
+  points de grille demandés        100
+  points de grille évalués         100
+  points de grille admis           99
+  intervalle exploré               [0, 0,604442]
+  élagage de la variable de seuil  0,1
+  plus petit régime admis          368
+
+Inférence
+  estimateur de variance                         robust
+  variance conjointe avec le seuil               oui
+  fenêtre du noyau du seuil                      0,112204
+  niveau de confiance (%)                        95
+  bootstrap exécuté                              oui
+  type de bootstrap                              wild
+  tirages de bootstrap                           299
+  graine du bootstrap                            20260611
+  points de la grille de l'IC                    100
+  points de l'ensemble de confiance non résolus  0
+
+Logiciel
+  paquet     pyxtdpthresh 0.0.1
+  reproduit  xtdpthresh 0.9.38 (Stata 17)
