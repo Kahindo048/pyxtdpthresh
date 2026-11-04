@@ -324,6 +324,8 @@ def simulate_panel(
     unbalanced
         Share of observations dropped at random (gaps in the panel).  The drop does not change the
         remaining values.  A unit left with fewer than ``min_obs`` observations is removed.
+    min_obs
+        Fewest observations a unit must keep when ``unbalanced`` drops some (default 3).
     **changes
         Parameters of the design to override, including ``jump``.
 
@@ -333,6 +335,13 @@ def simulate_panel(
         Columns ``id``, ``t`` (1 to ``t``), ``y`` and ``q``.  When the threshold variable is the
         lagged outcome, ``q`` is ``y(-1)``, and ``q`` of the first period is the outcome of the
         period before it (unobserved otherwise).
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> panel = pyx.simulate_panel("gong_seo", n=200, t=6, seed=1)
+    >>> panel.shape, list(panel.columns)
+    ((1200, 4), ['id', 't', 'y', 'q'])
     """
     spec = resolve_design(design, **changes)
     _check_sizes(n, t, burn, unbalanced, min_obs)

@@ -69,6 +69,18 @@ def xthenreg(
     -------
     XthenregResult
         Estimates, confidence intervals and the methods to print and export.
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> df = pyx.load_dataset("invest")
+    >>> df = df[~df["firm"].isin([137, 391, 407, 488, 538])]
+    >>> sk = pyx.xthenreg(df, "invest", ["cashflow", "tobin_q"], q="debt", id="firm", time="year",
+    ...                   boot_reps=19, seed=3)
+    >>> sk.names[:3]
+    ('Lag_y_b', 'cashflow_b', 'tobin_q_b')
+    >>> round(sk.gamma, 4)
+    0.2226
     """
     sample = prepare_data(
         data, y, q, _names(x), _names(endogenous), _names(exogenous), _names(inst),

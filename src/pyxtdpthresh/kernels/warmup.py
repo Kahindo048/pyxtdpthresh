@@ -12,6 +12,11 @@ def warmup() -> None:
 
     The signatures are the ones the estimators use (``float64`` / ``int64`` arrays), so the
     compiled code is reused afterwards.
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> pyx.warmup()  # compile the kernels now rather than at the first estimation
     """
     z = np.array([[1.0, 0.0], [0.5, 2.0]])
     ptr = np.array([0, 1, 2], dtype=np.int64)

@@ -1,12 +1,13 @@
-"""The validation report (K.3.2): how far the package is from Stata 17, case by case and object by object.
+"""The validation appendix (K.3.2): how far the package is from Stata 17, case by case and object by object.
 
     python -m validation.report --record   # run tests/golden and record every deviation
-    python -m validation.report            # build docs/validation_report.tex and .pdf
+    python -m validation.report            # write docs/validation_appendix.tex
 
 ``--record`` runs the golden tests with ``PYX_RECORD_DEVIATIONS`` set (see
 ``tests/golden/conftest.py``); the deviations land in ``validation/deviations.jsonl``.  The
 report adds the examples of the help file (:mod:`validation.help_examples`), which are compared
-there object by object.  It is a LaTeX document compiled twice with XeLaTeX.
+there object by object.  The result is Appendix B of the user guide: a LaTeX fragment that
+``tools/build_guide_pdf.py`` inserts after the methodological note (Appendix A).
 """
 
 from __future__ import annotations
@@ -16,10 +17,8 @@ import json
 import os
 import platform
 import re
-import shutil
 import subprocess
 import sys
-import tempfile
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,7 +28,7 @@ from validation.compare import ATOL, RTOL
 
 ROOT = Path(__file__).resolve().parents[1]
 RECORDS = ROOT / "validation" / "deviations.jsonl"
-OUTPUT = ROOT / "docs" / "validation_report.pdf"
+OUTPUT = ROOT / "docs" / "validation_appendix.tex"
 #: Test module -> title of the block of the report, in the order of the report.
 BLOCKS: dict[str, str] = {
     "test_rng_golden": "Random numbers (Stata's Mersenne Twister)",
@@ -110,6 +109,22 @@ def help_records() -> list[Record]:
     return out
 
 
+def stress_records() -> list[Record]:
+    """The random scenarios of the stress test (K.5): one record per object of each estimated one."""
+    from validation import stress, stress_cases
+
+    golden = stress_cases.frozen()
+    out = []
+    for s in stress.scenarios(golden["meta"]["count"], golden["meta"]["seed"]):
+        kind, detail = stress_cases.verdict(s, golden["cases"][s.name])
+        if kind != "ok" or not all(r.ok for r in detail):
+            continue  # both refuse (same return code), or a degenerate case listed in the test
+        for r in detail:
+            margin = min(r.abs_dev / ATOL, r.rel_dev / RTOL)
+            out.append(Record("stress", s.name, f"{r.group}: {r.name}", 1, r.abs_dev, margin))
+    return out
+
+
 def summarise(records: list[Record]) -> dict[str, dict[str, Any]]:
     """Per block: cases, objects, values, largest absolute deviation and largest margin."""
     out: dict[str, dict[str, Any]] = {}
@@ -187,38 +202,32 @@ def _table(spec: str, head: str, rows: list[str]) -> str:
     )  # fmt: skip
 
 
-PREAMBLE = r"""\documentclass[10.5pt,a4paper]{article}
-\usepackage[margin=2.3cm]{geometry}
-\usepackage{fontspec}
-\setmainfont{Latin Modern Roman}
-\setmonofont{Latin Modern Mono}[Scale=0.92]
-\usepackage{amsmath}
-\usepackage{booktabs,longtable,array}
-\usepackage{etoolbox}
-\AtBeginEnvironment{longtable}{\footnotesize}
-\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue]{hyperref}
-\usepackage{fancyhdr}
-\pagestyle{fancy}\fancyhf{}
-\fancyhead[L]{\small pyxtdpthresh validation report}
-\fancyfoot[C]{\small\thepage}
-\setlength{\emergencystretch}{3em}
-\renewcommand{\arraystretch}{1.12}
-\setlength{\tabcolsep}{4pt}
-\newcommand{\code}[1]{\texttt{#1}}
-"""
+#: Start of the appendix: the macro of the report (typewriter text that is already escaped).
+HEAD = r"""\clearpage
+\providecommand{\vcode}[1]{\texttt{#1}}"""
 
 
-def render(blocks: dict[str, list[Record]], help_rows: list[Record], meta: dict[str, str]) -> str:
+def render(
+    blocks: dict[str, list[Record]],
+    help_rows: list[Record],
+    meta: dict[str, str],
+    stress_rows: list[Record] | None = None,
+) -> str:
     """The LaTeX source of the report."""
-    every = [r for part in blocks.values() for r in part if r.rtol is None] + help_rows
+    stress_rows = stress_rows or []
+    every = (
+        [r for part in blocks.values() for r in part if r.rtol is None] + help_rows + stress_rows
+    )
     total = {"cases": 0, "objects": 0, "comparisons": 0, "values": 0}
     worst_abs = max(r.abs for r in every)
     worst_margin = max(r.margin for r in every)
     summary = {**summarise([r for part in blocks.values() for r in part])}
     summary["help_examples"] = summarise(help_rows)["help_examples"]
+    summary.update(summarise(stress_rows))
     titles = {
         **BLOCKS,
         "help_examples": "xtdpthresh: the examples of the help file (default options)",
+        "stress": "xtdpthresh: 120 random scenarios (stress test)",
     }
     rows = []
     for module, s in summary.items():
@@ -234,13 +243,12 @@ def render(blocks: dict[str, list[Record]], help_rows: list[Record], meta: dict[
         f"\\textbf{{{dev(worst_abs)}}} & \\textbf{{{worst_margin:.2g}}} \\\\".replace(",", r"\,")
     )
     parts = [
-        PREAMBLE,
-        rf"\title{{\textbf{{pyxtdpthresh {tex(meta['version'])}: validation against Stata 17}}\\[2pt]"
-        r"\large Largest deviation by block, by case and by object}",
-        r"\author{}",
-        rf"\date{{{tex(meta['date'])}}}",
-        r"\begin{document}\maketitle",
-        r"\section{Rule and method}",
+        HEAD,
+        rf"""\section{{Validation against Stata 17}}\label{{app:validation}}
+This appendix gives the largest deviation of the package (version {tex(meta["version"])}) from Stata 17 by
+block, by case and by object, over every comparison of the golden tests and of the stress test.
+It was built on {tex(meta["date"])} by \vcode{{python -m validation.report}}.""",
+        r"\subsection{Rule and method}",
         rf"""Every number the package reports must equal the one computed by Stata 17 to four
 decimals: the absolute difference is at most ${ATOL:g}$ \emph{{or}} the relative difference is at
 most ${RTOL:g}$ (the relative branch keeps the rule meaningful for large values such as the
@@ -249,35 +257,36 @@ objective function). The \emph{{margin}} of a value is $\min(|\Delta|/{ATOL:g},\
 largest margin of each block.
 
 The references are produced by the real commands ({tex(meta["commands"])}) run in batch with {tex(meta["stata"])};
-each object is exported at 15 significant digits and frozen in \code{{tests/golden/}}. The test
+each object is exported at 15 significant digits and frozen in \vcode{{tests/golden/}}. The test
 suite compares the package with the frozen values, and the deviations in this report are recorded
 by those very comparisons ({tex(meta["count"])} comparisons of matrices or numbers in the golden tests, plus the
 objects of the help-file examples). The random numbers of Stata are reproduced exactly, so the
 seeded bootstraps draw the weights of the command and their $p$-values and confidence sets are
 compared directly.""",
-        r"\section{Summary by block}",
+        r"\subsection{Summary by block}",
         _table(
             r"@{}p{7.4cm}rrrrr@{}",
             r"Block & Cases & Objects & Values & Largest $|\Delta|$ & Margin",
             rows,
         ),
         r"""\noindent \emph{Cases} are the distinct designs or samples of a block; \emph{Objects} are the
-distinct names compared (for example \code{e(b)}); \emph{Values} counts every number compared, a
+distinct names compared (for example \vcode{e(b)}); \emph{Values} counts every number compared, a
 matrix counting for all its elements. The absolute deviation is large only where the values
 are (the matrix routines are tested on very large and very small matrices); the margin says
 whether the rule holds. Integer results (counts of equations, instruments, return
 codes of the refusals, sets of rows) are compared for exact equality and are not listed in the
 deviations: the tests fail on the first difference.""",
-        r"\section{The examples of the help file}",
-        r"""The eight commands of the help file of \code{xtdpthresh} were run as printed, with the default options of Stata
-(\code{boot(299)}, \code{gridci(100)}, \code{grid(100)}), on Hansen's investment panel without the five extreme firms.
-The tables of the values, Python against Stata, are in \code{docs/help\_examples.md}; the largest deviation of each
+        r"\subsection{The examples of the help file}",
+        r"""The eight commands of the help file of \vcode{xtdpthresh} were run as printed, with the default options of Stata
+(\vcode{boot(299)}, \vcode{gridci(100)}, \vcode{grid(100)}), on Hansen's investment panel without the five extreme firms.
+The tables of the values, Python against Stata, are in \vcode{docs/help\_examples.md}; the largest deviation of each
 kind of object is below.""",
         _help_table(help_rows),
     ]
-    parts.append(r"\section{Largest deviation by object}")
+    parts.append(_stress_section(stress_rows))
+    parts.append(r"\subsection{Largest deviation by object}")
     parts.append(
-        "The objects are named as the tests name them (\\code{e(b)}, \\code{e(V)}, \\code{e(ci\\_grid)}\\ldots). "
+        "The objects are named as the tests name them (\\vcode{e(b)}, \\vcode{e(V)}, \\vcode{e(ci\\_grid)}\\ldots). "
         "A block appears here when it compares several named objects over several cases; "
         "the other blocks compare one kind of value, or one object per case, and are described "
         "by the table of their cases in the next section."
@@ -286,7 +295,7 @@ kind of object is below.""",
         objects = by_object(part)
         if len(objects) < 2 or len(objects) == len({r.case for r in part}):
             continue
-        parts.append(rf"\subsection*{{{tex(BLOCKS[module])}}}")
+        parts.append(rf"\subsubsection*{{{tex(BLOCKS[module])}}}")
         parts.append(
             _table(
                 r"@{}p{8.2cm}rrr@{}",
@@ -297,11 +306,11 @@ kind of object is below.""",
                 ],
             )
         )
-    parts.append(r"\section{Largest deviation by case}")
+    parts.append(r"\subsection{Largest deviation by case}")
     for module, part in blocks.items():
         if not part:
             continue
-        parts.append(rf"\subsection*{{{tex(BLOCKS[module])}}}")
+        parts.append(rf"\subsubsection*{{{tex(BLOCKS[module])}}}")
         parts.append(
             _table(
                 r"@{}p{3.6cm}rrp{4.9cm}r@{}",
@@ -315,7 +324,7 @@ kind of object is below.""",
     relaxed = [r for part in blocks.values() for r in part if r.rtol is not None]
     parts.append(_relaxed_section(relaxed))
     parts.append(
-        rf"""\section{{What this report does not cover}}
+        rf"""\subsection{{What this report does not cover}}
 \begin{{itemize}}
 \item The statistical behaviour of the package's own seeds (size and power of the tests, coverage
 of the confidence set over many panels) is measured by Monte Carlo and compared with the papers,
@@ -324,27 +333,29 @@ not with Stata.
 the tests check the printed digits, not the typography. They are not in the deviations above.
 \item Timings are measured on the same machine one run after the other and are not a validation.
 \item The messages that Stata prints and the package does not (the warning of an unbalanced
-\code{{boottype(unit)}} and the hint on near-common variables in a rank failure) are not compared;
+\vcode{{boottype(unit)}} and the hint on near-common variables in a rank failure) are not compared;
 they do not change any number.
 \end{{itemize}}
-\section{{Environment}}
+\subsection{{Environment}}
 \begin{{tabular}}{{@{{}}ll@{{}}}}
 Reference & {tex(meta["stata"])}; {tex(meta["commands"])} \\
 Package & pyxtdpthresh {tex(meta["version"])} \\
 Python & {tex(meta["python"])}; NumPy {tex(meta["numpy"])}; Numba {tex(meta["numba"])} \\
 Platform & {tex(meta["platform"])} \\
 Report built & {tex(meta["date"])} \\
-\end{{tabular}}
-\end{{document}}"""
+\end{{tabular}}"""
     )
     return "\n\n".join(parts)
 
 
 def _relaxed_section(relaxed: list[Record]) -> str:
     """The comparisons whose test declares a looser tolerance than the rule of the project."""
-    head = r"\section{Comparisons under a looser tolerance}"
+    head = r"\subsection{Comparisons under a looser tolerance}"
     if not relaxed:
-        return head + "\nNo comparison uses a tolerance looser than the rule of Section 1."
+        return (
+            head
+            + "\nNo comparison uses a tolerance looser than the rule stated at the beginning of this appendix."
+        )
     rows = [
         f"{code(r.case)} & {code(r.object)} & {dev(r.rtol or 0)} & {dev(r.abs)} \\\\"
         for r in relaxed
@@ -359,6 +370,42 @@ def _relaxed_section(relaxed: list[Record]) -> str:
     )
     spec, columns = r"@{}p{3cm}p{3cm}rr@{}", r"Case & Object & Relative tolerance & $|\Delta|$"
     return "\n".join([head, text, _table(spec, columns, rows)])
+
+
+def _stress_section(stress_rows: list[Record]) -> str:
+    """The stress test: random panels and option combinations against Stata."""
+    from validation import stress_cases
+
+    golden = stress_cases.frozen()
+    total = golden["meta"]["count"]
+    refused = sum(1 for c in golden["cases"].values() if c["rc"] != 0)
+    agreed = len({r.case for r in stress_rows})
+    other = total - refused - agreed
+    return rf"""\subsection{{The stress test}}
+{total} panels and calls were drawn at random (units, periods, share of missing periods and of
+missing values, a normal, rounded, heavy-tailed, outlying or four-valued threshold variable, the
+roles of the regressors, \vcode{{method}}, \vcode{{kink}}, \vcode{{td}}, \vcode{{collapse}}, \vcode{{maxlag}}, the grid and the
+bootstrap) and run in Stata and in the package on the same numbers (\vcode{{validation/stress.py}},
+\vcode{{validation/stress\_cases.py}}). The panels are read by Stata with \vcode{{asdouble}}: by default
+\vcode{{import delimited}} stores 32-bit floats, which moves a weakly identified estimate by $10^{{-6}}$.
+\begin{{itemize}}
+\item {agreed} scenarios are estimated by both and agree on every object of the result
+(the objects are those of the help-file examples; see the summary table).
+\item {refused} are refused by both with the same return code (498: no admissible threshold, an
+ill-conditioned instrument matrix\ldots).
+\item {other} are degenerate and decided by rounding noise, and are listed in the test as expected
+to differ: with fewer units than instruments the criterion is exactly zero over part of the grid, so
+the extra candidate of the confidence set is the first of tied minima; with fewer equations than
+instrument columns the dependence rule of the command keeps or drops a column on a pivot of the order
+of $10^{{-13}}$, its own limit. The command documents this limit in its source.
+\end{{itemize}}
+Without Stata the same panels also check that the package never crashes (only its own exceptions,
+with a Stata return code), that every output works (summary, tables in five formats, JSON, plot,
+prediction), that a result does not change when the rows are shuffled, the units renamed or the time
+origin shifted, that the threshold follows an affine change of the threshold variable, that one or
+several BLAS threads give the same numbers, and that other containers of the same data (a
+\vcode{{MultiIndex}}, categorical or string identifiers, nullable or 32-bit numbers, accented names)
+give the same result while damaged inputs are refused with a message."""
 
 
 def _help_table(help_rows: list[Record]) -> str:
@@ -421,25 +468,12 @@ def record() -> Path:
 
 
 def build(output: Path = OUTPUT) -> Path:
-    """Write ``validation_report.tex`` next to ``output``, compile it, and return the PDF path."""
-    if shutil.which("xelatex") is None:
-        raise SystemExit("xelatex is needed to build the report and was not found on the PATH")
+    """Write the LaTeX of the appendix (inserted into the guide by ``tools/build_guide_pdf.py``)."""
     records = load()
     blocks = {module: [r for r in records if r.module == module] for module in BLOCKS}
-    source = render(blocks, help_records(), metadata(len(records)))
-    with tempfile.TemporaryDirectory() as tmp:
-        work = Path(tmp)
-        (work / "validation_report.tex").write_text(source, encoding="utf-8")
-        for _ in range(2):
-            done = subprocess.run(
-                ["xelatex", "-interaction=nonstopmode", "-halt-on-error", "validation_report.tex"],
-                cwd=work, capture_output=True, text=True, encoding="utf-8", errors="replace",
-            )  # fmt: skip
-            if done.returncode != 0:
-                raise SystemExit(f"xelatex failed:\n{done.stdout[-3000:]}")
-        output.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(work / "validation_report.pdf", output)
-        shutil.copyfile(work / "validation_report.tex", output.with_suffix(".tex"))
+    source = render(blocks, help_records(), metadata(len(records)), stress_records())
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(source + "\n", encoding="utf-8", newline="\n")
     return output
 
 

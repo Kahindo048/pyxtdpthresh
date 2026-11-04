@@ -110,6 +110,28 @@ def plot(
     **options
         Options of the graph (``var`` for ``"effect"``, ``variables`` for ``"coef"``, ``bins`` for
         ``"regimes"``).
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure; with ``path`` it has also been written to the file.
+
+    Raises
+    ------
+    SpecificationError
+        The kind is unknown, does not fit the object given (``plot_wrong_result``), or is asked
+        of an ``xthenreg`` result (``plot_xthenreg``).
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> df = pyx.load_dataset("invest")
+    >>> df = df[~df["firm"].isin([137, 391, 407, 488, 538])]
+    >>> res = pyx.xtdpthresh(df, "invest", q="debt", endogenous=["cashflow", "tobin_q", "debt"],
+    ...                      maxlag=(3, 8), collapse=True, id="firm", time="year", bootstrap=False)
+    >>> fig = pyx.plot(res, "profile")
+    >>> type(fig).__name__
+    'Figure'
     """
     if kind not in PLOT_KINDS:
         raise SpecificationError(

@@ -1,11 +1,13 @@
-"""Build the LaTeX source and the PDF of the user guide from ``docs/user_guide.md``.
+r"""Build the LaTeX source and the PDF of the user guide from ``docs/user_guide.md``.
 
     python tools/build_guide_pdf.py [output.pdf]
 
-The Markdown file is the source of the guide and ``docs/methodological_note.tex`` the source of its
-Appendix A (the methodological note). The script writes ``docs/user_guide.tex`` (a standalone
-XeLaTeX document in the typeface of the author's articles: Latin Modern text, Computer Modern
-maths) and compiles it into ``docs/user_guide.pdf``. The note is inserted before
+The Markdown file is the source of the guide, ``docs/methodological_note.tex`` the source of its
+Appendix A (the methodological note) and ``docs/validation_appendix.tex`` (written by
+``python -m validation.report``) the source of its Appendix B (the validation against Stata 17).
+The script writes ``docs/user_guide.tex`` (a standalone XeLaTeX document in the typeface of the
+author's articles: Latin Modern text, Computer Modern maths) and compiles it into
+``docs/user_guide.pdf``. The note and the validation appendix are inserted before
 ``\end{document}``, and the line ``\input{ported_functions.tex}`` of the note is replaced by the
 tables of ``docs/ported_functions.md`` (the Stata functions and where they live) converted by
 pandoc.
@@ -34,6 +36,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "docs" / "user_guide.md"
 NOTE = ROOT / "docs" / "methodological_note.tex"
+VALIDATION = ROOT / "docs" / "validation_appendix.tex"
 PORTED = ROOT / "docs" / "ported_functions.md"
 DEFAULT_OUTPUT = ROOT / "docs" / "user_guide.pdf"
 #: The line of the note that is replaced by the table generated from ``PORTED``.
@@ -146,13 +149,16 @@ def ported_functions_tex(work: Path) -> str:
 
 
 def insert_note(tex: str, work: Path) -> str:
-    """Put the methodological note before ``\\end{document}`` of the guide."""
+    """Put the methodological note, then the validation appendix, before ``\\end{document}``."""
     note = NOTE.read_text(encoding="utf-8")
     lines = note.split("\n")
     if lines.count(INCLUDE_PORTED) != 1 or tex.count(r"\end{document}") != 1:
         raise SystemExit("the note or the guide does not have the expected structure")
     lines[lines.index(INCLUDE_PORTED)] = ported_functions_tex(work)
     note = "\n".join(lines)
+    if not VALIDATION.exists():
+        raise SystemExit(f"{VALIDATION} is missing: run python -m validation.report first")
+    note += "\n" + VALIDATION.read_text(encoding="utf-8")
     return tex.replace(r"\end{document}", note + "\n\\end{document}")
 
 

@@ -44,7 +44,19 @@ DATASETS: dict[str, Dataset] = {
 
 
 def list_datasets() -> dict[str, str]:
-    """Return the bundled datasets and their descriptions."""
+    """Return the bundled datasets and their descriptions.
+
+    Returns
+    -------
+    dict
+        ``{name: description}``; the names are those :func:`load_dataset` accepts.
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> list(pyx.list_datasets())
+    ['invest']
+    """
     return {name: data.description for name, data in DATASETS.items()}
 
 
@@ -66,6 +78,13 @@ def load_dataset(name: str = "invest") -> pd.DataFrame:
     ------
     SpecificationError
         ``name`` is not a bundled dataset (``key`` is ``dataset_unknown``).
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> df = pyx.load_dataset("invest")
+    >>> df.shape[0], df["firm"].nunique()
+    (8475, 565)
     """
     if name not in DATASETS:
         raise SpecificationError(

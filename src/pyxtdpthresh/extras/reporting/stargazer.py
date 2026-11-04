@@ -337,43 +337,130 @@ class ThresholdStargazer:
 
     # ------------------------------------------------------------------------------ outputs
     def to_latex(self, path: str | Path | None = None) -> str:
-        """Return the table as LaTeX (``booktabs``); also write it to ``path`` when given."""
+        """Return the table as LaTeX (``booktabs``); also write it to ``path`` when given.
+
+        Parameters
+        ----------
+        path
+            File to write (UTF-8), in addition to returning the text.
+
+        Returns
+        -------
+        str
+            The table as LaTeX.
+        """
         from pyxtdpthresh.extras.reporting.renderers import latex
 
         return _emit(latex.render(self.spec), path)
 
     def to_html(self, path: str | Path | None = None) -> str:
-        """Return the table as an HTML fragment; also write it to ``path`` when given."""
+        """Return the table as an HTML fragment; also write it to ``path`` when given.
+
+        Parameters
+        ----------
+        path
+            File to write (UTF-8), in addition to returning the text.
+
+        Returns
+        -------
+        str
+            The table as an HTML fragment.
+        """
         from pyxtdpthresh.extras.reporting.renderers import html
 
         return _emit(html.render(self.spec), path)
 
     def to_markdown(self, path: str | Path | None = None) -> str:
-        """Return the table as a Markdown pipe table; also write it to ``path`` when given."""
+        """Return the table as a Markdown pipe table; also write it to ``path`` when given.
+
+        Parameters
+        ----------
+        path
+            File to write (UTF-8), in addition to returning the text.
+
+        Returns
+        -------
+        str
+            The table as a Markdown pipe table.
+        """
         from pyxtdpthresh.extras.reporting.renderers import markdown
 
         return _emit(markdown.render(self.spec), path)
 
     def to_text(self, path: str | Path | None = None) -> str:
-        """Return the table as aligned plain text; also write it to ``path`` when given."""
+        """Return the table as aligned plain text; also write it to ``path`` when given.
+
+        Parameters
+        ----------
+        path
+            File to write (UTF-8), in addition to returning the text.
+
+        Returns
+        -------
+        str
+            The table as aligned plain text.
+        """
         from pyxtdpthresh.extras.reporting.renderers import text
 
         return _emit(text.render(self.spec), path)
 
     def to_csv(self, path: str | Path | None = None) -> str:
-        """Return the table as CSV text; also write it to ``path`` when given."""
+        """Return the table as CSV text; also write it to ``path`` when given.
+
+        Parameters
+        ----------
+        path
+            File to write (UTF-8), in addition to returning the text.
+
+        Returns
+        -------
+        str
+            The table as CSV text.
+        """
         from pyxtdpthresh.extras.reporting.renderers import csv
 
         return _emit(csv.render(self.spec), path)
 
     def to_word(self, path: str | Path) -> Path:
-        """Write the table to a Word file (needs ``python-docx``) and return its path."""
+        """Write the table to a Word file (needs ``python-docx``) and return its path.
+
+        Parameters
+        ----------
+        path
+            File to write.
+
+        Returns
+        -------
+        pathlib.Path
+            The file that was written.
+
+        Raises
+        ------
+        PyxdpthreshError
+            ``python-docx`` is not installed.
+        """
         from pyxtdpthresh.extras.reporting.renderers import word
 
         return _written(word.write(self.spec, Path(path)))
 
     def to_excel(self, path: str | Path) -> Path:
-        """Write the table to an Excel file (needs ``openpyxl``) and return its path."""
+        """Write the table to an Excel file (needs ``openpyxl``) and return its path.
+
+        Parameters
+        ----------
+        path
+            File to write.
+
+        Returns
+        -------
+        pathlib.Path
+            The file that was written.
+
+        Raises
+        ------
+        PyxdpthreshError
+            ``openpyxl`` is not installed.
+        """
         from pyxtdpthresh.extras.reporting.renderers import excel
 
         return _written(excel.write(self.spec, Path(path)))
@@ -412,5 +499,30 @@ def compare(models: Sequence[object], **options: Any) -> ThresholdStargazer:
     """Put fitted models side by side (xthenreg against xtdpthresh, FD against FOD, jump, kink).
 
     A shortcut for :class:`ThresholdStargazer`: ``compare([a, b], model_names=["FD", "FOD"])``.
+
+    Parameters
+    ----------
+    models
+        Results of :func:`pyxtdpthresh.xtdpthresh` and :func:`pyxtdpthresh.xthenreg`, in the
+        order of the columns.
+    **options
+        Options of :class:`ThresholdStargazer` (``model_names``, ``statistic``, ``star_levels``,
+        ``digits``...).
+
+    Returns
+    -------
+    ThresholdStargazer
+        The table, with the ``to_*`` writers.
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> df = pyx.load_dataset("invest")
+    >>> df = df[~df["firm"].isin([137, 391, 407, 488, 538])]
+    >>> res = pyx.xtdpthresh(df, "invest", q="debt", endogenous=["cashflow", "tobin_q", "debt"],
+    ...                      maxlag=(3, 8), collapse=True, id="firm", time="year", bootstrap=False)
+    >>> table = pyx.compare([res], model_names=["FD"])
+    >>> table.to_text().splitlines()[1]
+    'Dependent variable: invest'
     """
     return ThresholdStargazer(models, **options)

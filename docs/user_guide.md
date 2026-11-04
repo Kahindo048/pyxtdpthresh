@@ -2,7 +2,7 @@
 
 This guide explains every argument of the two estimators, how each one corresponds to the Stata
 option it ports, and how to read what comes back. It assumes you know what a dynamic panel
-threshold model is; the equations and the algorithms are in the methodological note, Appendix A of the PDF edition of this guide (`user_guide.pdf`, built from `docs/methodological_note.tex`). The Stata
+threshold model is; the equations and the algorithms are in the methodological note, Appendix A of the PDF edition of this guide (`user_guide.pdf`, built from `docs/methodological_note.tex`); the comparison with Stata 17, number by number, is Appendix B. The Stata
 help files (`xtdpthresh.sthlp`, `xthenreg.sthlp`) remain the reference for the commands; this
 guide says where the Python package differs from them.
 
@@ -37,6 +37,11 @@ pass `id=` and `time=` yourself (the names are never guessed).
 `xtdpthresh` accepts unbalanced panels. `xthenreg` needs a strongly balanced panel (every unit
 observed in every period) and stops with an error otherwise, as the Stata command does.
 
+**Names and missing values.** Column names may contain accents and other Unicode letters
+(`"investissé"`, `"dette_é"`), as in Stata 14 and later; a name with a space is refused. A `NaN`,
+a missing nullable value and an infinity (`±inf`, for example after a `log(0)`) are all missing,
+as Stata has no infinity; an infinity gives a warning that names the column and the count.
+
 **Time-series operators.** Variable names in every role may carry Stata's operators as text:
 `"L.x"`, `"L2.x"`, `"D.x"`, `"S12.x"`, `"L(1/2).x"`. They are computed on the calendar, as in
 Stata: `L.x` is the value of the *period* before, so a gap in a unit's dates gives a missing value.
@@ -56,8 +61,12 @@ df = df[~df["firm"].isin([137, 391, 407, 488, 538])]
 # The model of Seo and Shin (2016, section 7): all four slopes change at a leverage threshold,
 # cash flow, Tobin's q and leverage are endogenous, instruments are lags 3 to 8, collapsed.
 MODEL = dict(
-    q="debt", endogenous=["cashflow", "tobin_q", "debt"],
-    maxlag=(3, 8), collapse=True, id="firm", time="year",
+    q="debt",
+    endogenous=["cashflow", "tobin_q", "debt"],
+    maxlag=(3, 8),
+    collapse=True,
+    id="firm",
+    time="year",
 )
 ```
 
@@ -70,12 +79,12 @@ no_names = {k: v for k, v in MODEL.items() if k not in ("id", "time")}
 same = pyx.xtdpthresh(indexed, "invest", bootstrap=False, **no_names)
 print(round(same.gamma, 4))
 
-print(pyx.list_datasets())        # name -> description
+print(pyx.list_datasets())  # name -> description
 
 # A .dta saved without xtset gives a plain frame: the names are never guessed.
 df[["firm", "year", "invest", "debt"]].to_stata("panel.dta", write_index=False)
 raw = pyx.from_stata("panel.dta")
-print(raw.attrs["id"], raw.attrs["time"])      # None None: pass id= and time= yourself
+print(raw.attrs["id"], raw.attrs["time"])  # None None: pass id= and time= yourself
 ```
 
 A file saved after `xtset` (or `xtset …, delta()`) gives a frame whose index levels are the panel
@@ -137,7 +146,9 @@ print(late.n_obs)
 # Your own candidate thresholds, instead of the grid built from `grid`.
 import numpy as np
 
-own = pyx.xtdpthresh(df, "invest", grid_values=np.linspace(0.05, 0.55, 11), bootstrap=False, **MODEL)
+own = pyx.xtdpthresh(
+    df, "invest", grid_values=np.linspace(0.05, 0.55, 11), bootstrap=False, **MODEL
+)
 print(round(own.gamma, 4))
 ```
 
@@ -152,7 +163,7 @@ print(res)
 **External instruments.** `iv` takes names (with operators) of variables that are not regressors:
 
 ```python
-df["peer_q"] = df.groupby("year")["tobin_q"].transform("mean")   # yearly mean of Tobin's q
+df["peer_q"] = df.groupby("year")["tobin_q"].transform("mean")  # yearly mean of Tobin's q
 withiv = pyx.xtdpthresh(df, "invest", iv=["L2.peer_q"], bootstrap=False, **MODEL)
 print(withiv.n_instruments)
 ```
@@ -255,12 +266,14 @@ def fit(**changes):
 
 
 def show(label, r):
-    print(f"{label:26s} gamma={r.gamma:.4f}  equations={r.n_obs}  instruments={r.n_instruments}"
-          f"  Hansen p={r.scalars['hansen_p']:.3f}")
+    print(
+        f"{label:26s} gamma={r.gamma:.4f}  equations={r.n_obs}  instruments={r.n_instruments}"
+        f"  Hansen p={r.scalars['hansen_p']:.3f}"
+    )
 
 
 # Model
-show("static (lags 2-8)", fit(static=True, maxlag=(2, 8)))   # no automatic L.invest
+show("static (lags 2-8)", fit(static=True, maxlag=(2, 8)))  # no automatic L.invest
 show("time effects (td)", fit(time_effects=True))
 show("kink", fit(kink=True))
 show("history='sample', 1976+", fit(history="sample", where="year >= 1976"))
@@ -268,7 +281,10 @@ show("history='sample', 1976+", fit(history="sample", where="year >= 1976"))
 # Instruments
 show("maxlag (3, 5)", fit(maxlag=(3, 5)))
 show("no collapse, lags 3-5", fit(collapse=False, maxlag=(3, 5)))
-show("external, iv_collapse", fit(iv=["L2.cashflow"], iv_collapse=True, collapse=False, maxlag=(3, 5)))
+show(
+    "external, iv_collapse",
+    fit(iv=["L2.cashflow"], iv_collapse=True, collapse=False, maxlag=(3, 5)),
+)
 
 # Transformation, search, variance
 show("fod", fit(method="fod"))
@@ -284,25 +300,26 @@ show("warn=False", fit(warn=False))
 ```
 
 ```python
-infer = dict(n_boot=99, grid_ci=40, seed=1)     # a light bootstrap, for illustration
+infer = dict(n_boot=99, grid_ci=40, seed=1)  # a light bootstrap, for illustration
 
 
 def full(**changes):
     return pyx.xtdpthresh(df, "invest", **{**MODEL, **infer, **changes})
 
 
-print(full().gamma_ci, full(level=90).gamma_ci)       # 95 % and 90 % sets (hulls)
-print(full(linearity_test=False).scalars["pval_lin"])   # nan: the test was skipped
+print(full().gamma_ci, full(level=90).gamma_ci)  # 95 % and 90 % sets (hulls)
+print(full(linearity_test=False).scalars["pval_lin"])  # nan: the test was skipped
 print(full(continuity_test=True).scalars["pval_cont"])  # bootstrap test of continuity
 
 # Unit resampling (Algorithm 1 of Gong and Seo); slower, so fewer draws here.
-unit = pyx.xtdpthresh(df, "invest", **{**MODEL, "n_boot": 49, "grid_ci": 20, "seed": 1,
-                                       "boot_type": "unit"})
+unit = pyx.xtdpthresh(
+    df, "invest", **{**MODEL, "n_boot": 49, "grid_ci": 20, "seed": 1, "boot_type": "unit"}
+)
 print(unit.gamma_ci, unit.scalars["ci_nseg"])
 
 # Legacy coefficient bootstrap: a note is issued; the intervals are kept on the fit.
 legacy = full(coef_boot="onestep", coef_ci_type="percentile")
-print(legacy.fit.bootstrap.coefficient.interval.shape)   # (2, 9): lower and upper, e(b_bootci)
+print(legacy.fit.bootstrap.coefficient.interval.shape)  # (2, 9): lower and upper, e(b_bootci)
 ```
 
 `verbose` and `export_gmm` are accepted and do nothing (Section 11).
@@ -336,8 +353,12 @@ settings = {
 rows = {}
 for label, changes in settings.items():
     r = fit(**changes)
-    rows[label] = {"gamma": r.gamma, "instruments": r.n_instruments,
-                   "hansen_p": r.scalars["hansen_p"], "ar2_p": r.scalars["ar2_p"]}
+    rows[label] = {
+        "gamma": r.gamma,
+        "instruments": r.n_instruments,
+        "hansen_p": r.scalars["hansen_p"],
+        "ar2_p": r.scalars["ar2_p"],
+    }
 print(pd.DataFrame(rows).T.round(4))
 ```
 
@@ -442,11 +463,12 @@ balanced panels, with the sup-Wald linearity test of Seo and Shin (2016).
 | `h_0` | `h_0(real)` | `1.5` | Multiplier of the kernel bandwidth `h = h_0 · 1.06 · N^(-1/5) · sd(q)` of the covariance (jump model only; the kink model has no bandwidth). Checked against Stata with `h_0(3)` and `h_0(0.7)`. |
 
 ```python
-sk = pyx.xthenreg(df, "invest", ["cashflow", "tobin_q"], q="debt", id="firm", time="year",
-                  boot_reps=49, seed=3)
+sk = pyx.xthenreg(
+    df, "invest", ["cashflow", "tobin_q"], q="debt", id="firm", time="year", boot_reps=49, seed=3
+)
 print(sk.names)
 print(round(sk.gamma, 4), round(sk.scalars["sup_wald"], 2), sk.scalars["boots_p"])
-print(sk.ci.round(3))          # e(CI): lower and upper limits of every coefficient, γ last
+print(sk.ci.round(3))  # e(CI): lower and upper limits of every coefficient, γ last
 print(pyx.compare([sk, full()], model_names=["xthenreg", "xtdpthresh"]).to_text())
 ```
 
@@ -481,34 +503,108 @@ instrumented by their levels where `xtdpthresh` uses their transformed values.
 
 ### The printed result
 
-`print(res)` (or just `res` in a notebook) shows the sample, the threshold with its confidence
-interval, the three blocks of slopes, and the four diagnostic tests:
+`print(res)` (or just `res` in a notebook) prints a report in the layout of `pyxtabond2` and
+`pyxthreg`, 80 columns wide: the header (sample, model, options), the threshold with its confidence
+interval, the threshold-effect test with its bootstrap critical values, the slopes of the three
+regimes, and the diagnostic tests:
 
 ```
-Dynamic panel threshold model
-Dependent variable: invest   Units: 560   Observations: 6720
-Threshold variable: debt   Threshold γ̂ = 0.4194   Threshold 95 % interval: [0.0122, 0.5227]
-Threshold effect: jump   Transformation: FD   Estimator: two-step
-...
-Lower regime      slopes below the threshold                       (e(b), equation "lower")
-Change at the threshold   shifts above it: _cons is δ₁, the rest δ₂  (e(b), equation "change")
-Upper regime      lower + change, with its own standard error      (e(b_upper), e(V_upper))
-...
-Hansen J (p-value): 0.3818   AR(1) (p-value): 0.0000
-AR(2) (p-value): 0.7382   Linearity test (p-value): 0.0067
+                        PyXtdpthresh Estimation Results
+================================================================================
+Dep. Variable:                  invest    Threshold var.:                   debt
+Model:            Dyn. panel threshold    Threshold effect:                 jump
+Method:                       Two-Step    Transformation:                     FD
+Date:                 Wed, 04 Nov 2026    Group Variable:                   firm
+Time:                         10:12:31    Time variable:                    year
+No. Observations:                 6720    Lag Limits:                     (3, 8)
+No. Groups:                        560    Collapse:                          Yes
+Obs per group:                   12.00    Time effects:                       No
+No. Instruments:                    25    Bootstrap B / seed:        299 / 12345
+Covariance Type: Robust (joint, gamma)    Grid points:                       100
+================================================================================
+
+                       Threshold Estimates (Level = 95%)
+================================================================================
+Model                          Threshold            Lower CI            Upper CI
+--------------------------------------------------------------------------------
+Th-1                              0.4194              0.0122              0.5227
+================================================================================
+
+                   Threshold Effect Test (Bootstrap, B = 299)
+================================================================================
+Test                     Statistic     Prob      Crit10       Crit5        Crit1
+--------------------------------------------------------------------------------
+Linearity                   0.0087   0.0067      0.0052      0.0061       0.0085
+================================================================================
+
+                      Dynamic Panel Threshold Coefficients
+================================================================================
+                          coef  std err       z   P>|z|    [0.025    0.975]
+--------------------------------------------------------------------------------
+Lower regime  (debt <= 0.4194)
+  L.invest              0.0433   0.2377   0.182  0.8556   -0.4227    0.5092
+  cashflow             -0.0069   0.0752  -0.092  0.9269   -0.1543    0.1405
+  tobin_q               0.0041   0.0069   0.583  0.5596   -0.0096    0.0177
+  debt                 -0.1245   0.1006  -1.237  0.2162   -0.3217    0.0728
+Change at the threshold
+  _cons                -0.3922   0.1514  -2.590  0.0096   -0.6889   -0.0955 ***
+  L.invest              1.5909   0.5956   2.671  0.0076    0.4235    2.7584 ***
+  cashflow              0.3729   0.2524   1.477  0.1396   -0.1218    0.8675
+  tobin_q               0.0107   0.0438   0.244  0.8073   -0.0752    0.0966
+  debt                  0.3208   0.1717   1.868  0.0617   -0.0158    0.6573 *
+Upper regime  (debt > 0.4194)
+  L.invest              1.6342   0.5335   3.063  0.0022    0.5885    2.6799 ***
+  cashflow              0.3660   0.2033   1.800  0.0718   -0.0325    0.7645 *
+  tobin_q               0.0147   0.0426   0.346  0.7297   -0.0689    0.0983
+  debt                  0.1963   0.1654   1.187  0.2353   -0.1279    0.5205
+================================================================================
+Significance: * p<0.10, ** p<0.05, *** p<0.01
+
+                                Diagnostic Tests
+================================================================================
+Diagnostic Test                              Statistic                   P-value
+--------------------------------------------------------------------------------
+Arellano-Bond AR(1)                          z = -4.61            Pr > z = 0.000
+Arellano-Bond AR(2)                          z = -0.33            Pr > z = 0.738
+Hansen test of overid.                chi2(15) = 16.00         Pr > chi2 = 0.382
+================================================================================
 ```
 
-"Observations" is the number of stacked equations (`e(N)`), not of firm-years. Under `kink` the
+Reading it:
+
+- **Header.** Two columns, as in `pyxtabond2`. `No. Observations` is the number of stacked equations
+  (`e(N)`), `No. Groups` the units that contribute equations, `Lag Limits` the `maxlag` range (`.`
+  is no upper limit), `Bootstrap B / seed` the number of draws and the seed (the one drawn when none
+  was given, so the run can be repeated). The date and time are those of the estimation: printing the
+  result again gives the same text.
+- **Threshold Estimates.** The estimate and the confidence set of the threshold (grid bootstrap;
+  its hull, see `res.ci_table()` for the segments) at the level of the estimation, `-` without bootstrap.
+- **Threshold Effect Test.** The statistic and the bootstrap p-value of the linearity test (and of the
+  continuity test when requested). `Crit10`, `Crit5` and `Crit1` are the bootstrap critical values at
+  10, 5 and 1 percent: the `k`-th largest draw with `k = floor(size x (B + 1))`, so a statistic above
+  `Crit5` has a p-value of at most 0.05. A size with too few draws shows `-`. For `xthenreg` the
+  statistic is the sup-Wald and the critical values come from the supremum of each replication.
+- **Coefficients.** Lower regime, change at the threshold and upper regime (the upper slopes with
+  their own standard error). The interval is the normal one at `res.summary(level=...)`; stars mark
+  p < 0.10, 0.05 and 0.01.
+- **Diagnostic Tests.** Arellano-Bond AR(1) and AR(2) (first-difference residuals, joint with the
+  threshold) and the Hansen test, as `z`/`chi2` and p-value. `xthenreg` has none of them and shows `-`.
+
+`res.summary(lang="fr")` prints the same report in French. The numbers are those of `e()` and of
+the validated objects; the critical values are not Stata objects (they are derived from the
+bootstrap draws) and are shown for reading only.
+
+Under `kink` the
 change block holds only the change in the slope of `q`, and the upper block only the slope of `q`
 above the threshold (`res.upper` is `None` when `q` is not a regressor).
 
 ### Numbers as objects
 
 ```python
-print(res.params)          # Series indexed 'lower:cashflow', 'change:_cons', ... (e(b))
-print(res.se)              # standard errors from the reported variance (sqrt of the diagonal of e(V))
-print(res.cov.shape)       # e(V)
-print(res.upper)           # upper-regime slopes and standard errors (e(b_upper), e(V_upper))
+print(res.params)  # Series indexed 'lower:cashflow', 'change:_cons', ... (e(b))
+print(res.se)  # standard errors from the reported variance (sqrt of the diagonal of e(V))
+print(res.cov.shape)  # e(V)
+print(res.upper)  # upper-regime slopes and standard errors (e(b_upper), e(V_upper))
 print(res.gamma, res.gamma_ci)
 print(res.to_dataframe())  # estimate, se, z, p and the interval, indexed by (block, variable)
 ```
@@ -535,8 +631,8 @@ A dictionary with the names of Stata's `e()` (`nan` when a value does not exist 
 The tables behind the confidence set and the regimes:
 
 ```python
-print(res.ci_table().head())   # gamma, statistic, critical, accepted, n_valid, status
-print(res.regime_table())      # observations, units, share and the mean of each variable by regime
+print(res.ci_table().head())  # gamma, statistic, critical, accepted, n_valid, status
+print(res.regime_table())  # observations, units, share and the mean of each variable by regime
 ```
 
 In `ci_table()` the `status` is 1 for a resolved test, 2 for accepted with a zero statistic, 3 for a
@@ -615,8 +711,9 @@ touches the edge of the candidates: it is cut by the grid, so do not read its en
 *Too many instruments.* The same model on the first 79 firms, without `collapse` and with every lag:
 
 ```python
-small = pyx.xtdpthresh(df[df["firm"] < 80], "invest",
-                       **{**MODEL, **infer, "collapse": False, "maxlag": None})
+small = pyx.xtdpthresh(
+    df[df["firm"] < 80], "invest", **{**MODEL, **infer, "collapse": False, "maxlag": None}
+)
 print(small.n_units, small.n_instruments, small.scalars["estimator_twostep"])
 print(small.diagnose())
 ```
@@ -688,9 +785,14 @@ kink = pyx.xtdpthresh(df, "invest", kink=True, bootstrap=False, **MODEL)
 table = pyx.compare([fast, fod, kink], model_names=["FD jump", "FOD jump", "FD kink"])
 print(table.to_text())
 
-custom = res.table(statistic="ci", digits=2, keep=["cashflow", "debt"],
-                   covariate_labels={"cashflow": "Cash flow"},
-                   add_lines=[("Firm effects", ["Yes"])], title="Investment")
+custom = res.table(
+    statistic="ci",
+    digits=2,
+    keep=["cashflow", "debt"],
+    covariate_labels={"cashflow": "Cash flow"},
+    add_lines=[("Firm effects", ["Yes"])],
+    title="Investment",
+)
 print(custom.to_text())
 res.to_latex("table.tex", full_output=True)
 ```
@@ -732,13 +834,21 @@ differences.
 ```python
 rob = pyx.robustness(df, "invest", n_boot=99, grid_ci=40, seed=1, **MODEL)
 print(rob.table[["gamma", "gamma_lo", "gamma_hi", "ci_nseg", "in_reference_ci"]])
-print(rob.stability())     # share of the other runs whose threshold stays in the reference set
+print(rob.stability())  # share of the other runs whose threshold stays in the reference set
 
-own = pyx.robustness(df, "invest", n_boot=49, grid_ci=20, seed=1,
-                     settings={"trim": [0.05, 0.15], "method": ["fod"]}, product=True, **MODEL)
-print(own.table.index.tolist())    # reference, then the combinations
+own = pyx.robustness(
+    df,
+    "invest",
+    n_boot=49,
+    grid_ci=20,
+    seed=1,
+    settings={"trim": [0.05, 0.15], "method": ["fod"]},
+    product=True,
+    **MODEL,
+)
+print(own.table.index.tolist())  # reference, then the combinations
 rob.plot(path="robustness.png")
-print(rob.coefficients().head())   # every slope of every run, with its standard error
+print(rob.coefficients().head())  # every slope of every run, with its standard error
 ```
 
 `rob.table` has one row per run; `stability(use="segments")` counts a run as stable when its threshold
@@ -770,11 +880,11 @@ seed that is omitted is drawn and recorded in `res.seed`, `res.settings_log()` a
 
 ```python
 # not run by the tests
-pyx.set_options(lang="fr")        # messages, reports, figures in French
-pyx.set_options(threads=4)        # threads of the matrix products (default: half the logical cores)
-pyx.set_options(progress=True)    # progress line during long bootstraps, on standard error
+pyx.set_options(lang="fr")  # messages, reports, figures in French
+pyx.set_options(threads=4)  # threads of the matrix products (default: half the logical cores)
+pyx.set_options(progress=True)  # progress line during long bootstraps, on standard error
 with pyx.option_context(lang="fr"):
-    ...                           # temporary change
+    ...  # temporary change
 ```
 
 `set_options` returns the previous options. Numba kernels run on one thread, which is faster than
@@ -849,12 +959,23 @@ gap_fit = pyx.xtdpthresh(gaps, "y", id="id", time="t", bootstrap=False, **design
 print(round(gap_fit.gamma, 3), gap_fit.n_obs)
 
 mc = pyx.monte_carlo("gong_seo", 100, 5, reps=4, seed=11, workers=1, n_boot=49, grid_ci=20)
-print(mc.threshold_coverage())     # coverage of the true threshold by the set and by its hull
-print(mc.linearity())              # rejection rate: the power here, the size under design "linear"
-print(mc.power())                  # rejection rate of gamma + c, c = 0 included
+print(mc.threshold_coverage())  # coverage of the true threshold by the set and by its hull
+print(mc.linearity())  # rejection rate: the power here, the size under design "linear"
+print(mc.power())  # rejection rate of gamma + c, c = 0 included
 
-mc2 = pyx.monte_carlo("gong_seo", 100, 5, reps=4, seed=11, workers=1, n_boot=49, grid_ci=20,
-                      alpha=0.10, shifts=(0.2, 0.4), simulation={"jump": 0.5, "unbalanced": 0.1})
+mc2 = pyx.monte_carlo(
+    "gong_seo",
+    100,
+    5,
+    reps=4,
+    seed=11,
+    workers=1,
+    n_boot=49,
+    grid_ci=20,
+    alpha=0.10,
+    shifts=(0.2, 0.4),
+    simulation={"jump": 0.5, "unbalanced": 0.1},
+)
 print(mc2.power())
 print(mc2.estimates().round(3))
 ```
@@ -905,7 +1026,7 @@ All of them derive from `pyx.PyxdpthreshError` and are importable from the packa
 try:
     pyx.xtdpthresh(df, "invest", grid=5, bootstrap=False, **MODEL)
 except pyx.SpecificationError as error:
-    print(error.stata_code, error.key)         # 198 opt_grid
+    print(error.stata_code, error.key)  # 198 opt_grid
     print(error)
 ```
 

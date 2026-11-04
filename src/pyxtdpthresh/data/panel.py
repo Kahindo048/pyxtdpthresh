@@ -9,13 +9,14 @@ layer adds it, the equation flag.
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 
 import numpy as np
 import pandas as pd
 
-from pyxtdpthresh._errors import DataError
+from pyxtdpthresh._errors import DataError, PyxdpthreshWarning
 from pyxtdpthresh._i18n import message
 from pyxtdpthresh._types import BoolArray, FloatArray, IntArray
 from pyxtdpthresh.data.checks import (
@@ -151,7 +152,17 @@ def _numeric(frame: pd.DataFrame, name: str) -> FloatArray:
     col = frame[name]
     if not (pd.api.types.is_numeric_dtype(col) or pd.api.types.is_bool_dtype(col)):
         raise DataError(message("column_not_numeric", name=name, dtype=str(col.dtype)))
-    return np.asarray(col.to_numpy(dtype=np.float64, na_value=np.nan), dtype=np.float64)
+    values = np.array(col.to_numpy(dtype=np.float64, na_value=np.nan), dtype=np.float64)
+    infinite = np.isinf(values)
+    if infinite.any():
+        # Stata has no infinity: a number that overflows is missing (log(0), 1/0)
+        warnings.warn(
+            message("warn_infinite", n=int(infinite.sum()), name=name),
+            PyxdpthreshWarning,
+            stacklevel=2,
+        )
+        values[infinite] = np.nan
+    return values
 
 
 def _key_column(frame: pd.DataFrame, name: str | None, level: int) -> tuple[str, pd.Series]:

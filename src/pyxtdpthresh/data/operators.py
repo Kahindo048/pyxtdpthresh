@@ -25,7 +25,8 @@ from pyxtdpthresh._i18n import message
 from pyxtdpthresh._types import FloatArray
 from pyxtdpthresh.data.panel import Panel
 
-_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+# A letter (Unicode: Stata 14+ accepts "année") or an underscore, then word characters
+_NAME = re.compile(r"^[^\W\d]\w*$")
 _TOKEN = re.compile(r"([lfdsLFDS])(\([^)]*\)|\d*)")
 
 

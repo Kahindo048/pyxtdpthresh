@@ -1,8 +1,5 @@
 """The validation report is built from the deviations the golden tests record."""
 
-import shutil
-
-import pytest
 from validation import report
 
 
@@ -58,10 +55,12 @@ def test_the_report_covers_every_block_of_golden_tests_that_compares_numbers():
     assert len(modules) >= 20
 
 
-@pytest.mark.slow
-@pytest.mark.skipif(shutil.which("xelatex") is None, reason="xelatex is needed")
-def test_the_report_builds(tmp_path):
-    pdf = report.build(tmp_path / "report.pdf")
-    tex = (tmp_path / "report.tex").read_text(encoding="utf-8")
-    assert pdf.stat().st_size > 50_000
-    assert "Summary by block" in tex and "Comparisons under a looser tolerance" in tex
+def test_the_appendix_is_a_fragment_of_the_guide_not_a_document(tmp_path):
+    path = report.build(tmp_path / "appendix.tex")
+    tex = path.read_text(encoding="utf-8")
+    assert r"\documentclass" not in tex and r"\begin{document}" not in tex
+    assert r"\section{Validation against Stata 17}" in tex and "app:validation" in tex
+    assert r"\subsection{Summary by block}" in tex
+    assert "Comparisons under a looser tolerance" in tex
+    assert r"\code{" not in tex  # the macro of the note takes verbatim text, this one does not
+    assert tex.count(r"\begin{longtable}") == tex.count(r"\end{longtable}")

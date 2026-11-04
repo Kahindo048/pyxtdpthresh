@@ -352,6 +352,14 @@ def monte_carlo(
     Returns
     -------
     MonteCarloResult
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> mc = pyx.monte_carlo("gong_seo", n=200, t=6, reps=4, workers=1, seed=1, n_boot=19,
+    ...                      grid_ci=20)
+    >>> len(mc.records)
+    4
     """
     _check_experiment(reps, alpha, workers)
     spec = resolve_design(design)

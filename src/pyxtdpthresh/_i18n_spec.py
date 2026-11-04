@@ -479,6 +479,16 @@ SPEC_MESSAGES: dict[str, dict[str, str]] = {
         "en": "About {cols} instrument columns; consider maxlag or collapse.",
         "fr": "Environ {cols} colonnes d'instruments ; envisager maxlag ou collapse.",
     },
+    "warn_infinite": {
+        "en": (
+            "{n} infinite value(s) in {name} are treated as missing, as Stata treats a number "
+            "that overflows (check for log(0) or a division by zero)."
+        ),
+        "fr": (
+            "{n} valeur(s) infinie(s) dans {name} sont traitées comme manquantes, comme Stata "
+            "traite un nombre qui déborde (vérifier un log(0) ou une division par zéro)."
+        ),
+    },
     "warn_memory": {
         "en": (
             "The fit is expected to use about {gb} GB of memory. maxlag or collapse shrink the "

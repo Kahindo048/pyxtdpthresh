@@ -46,10 +46,29 @@ def get_options() -> Options:
 def set_options(**changes: Any) -> Options:
     """Change global options and return the previous ones.
 
+    Parameters
+    ----------
+    **changes
+        Any of the fields of :class:`Options`: ``lang`` (``"en"`` or ``"fr"``), ``threads`` (a
+        positive integer, or ``None`` for half of the logical cores) and ``progress``.
+
+    Returns
+    -------
+    Options
+        The options before the change, to restore them later.
+
     Raises
     ------
     ValueError
         If an option name or value is invalid.
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> previous = pyx.set_options(lang="fr")
+    >>> previous.lang
+    'en'
+    >>> _ = pyx.set_options(lang=previous.lang)
     """
     global _options
     previous = _options
@@ -67,7 +86,26 @@ def set_options(**changes: Any) -> Options:
 
 @contextmanager
 def option_context(**changes: Any) -> Iterator[Options]:
-    """Temporarily change options inside a ``with`` block."""
+    """Temporarily change options inside a ``with`` block.
+
+    Parameters
+    ----------
+    **changes
+        Options to set, as in :func:`set_options`; the previous ones are restored on exit, even
+        after an exception.
+
+    Yields
+    ------
+    Options
+        The options in force inside the block.
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> with pyx.option_context(lang="fr") as options:
+    ...     options.lang
+    'fr'
+    """
     previous = set_options(**changes)
     try:
         yield get_options()

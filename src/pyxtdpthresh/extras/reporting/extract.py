@@ -123,22 +123,64 @@ def _from_point_fit(fit: Any) -> ModelColumn:
     ci = boot.ci if boot is not None else None
     interval = (float(ci.lo), float(ci.hi)) if ci is not None and math.isfinite(ci.lo) else None
     test = boot.linearity if boot is not None else None
+    cont = boot.continuity if boot is not None else None
     options = fit.spec.options
+    low, high = options.maxlag
     stats: dict[str, Statistic] = {
         "n_obs": float(fit.n_obs),
         "n_units": float(fit.n_units),
         "n_instruments": float(fit.n_instruments),
+        "hansen": _nan_to_none(fit.hansen.statistic),
+        "hansen_df": _nan_to_none(fit.hansen.df),
         "hansen_p": _nan_to_none(fit.hansen.p_value),
+        "ar1": _nan_to_none(fit.serial.ar1.statistic),
         "ar1_p": _nan_to_none(fit.serial.ar1.p_value),
+        "ar2": _nan_to_none(fit.serial.ar2.statistic),
         "ar2_p": _nan_to_none(fit.serial.ar2.p_value),
+        "linearity": _nan_to_none(test.statistic) if test is not None else None,
         "linearity_p": _nan_to_none(test.p_value) if test is not None else None,
+        "continuity": _nan_to_none(cont.statistic) if cont is not None else None,
+        "continuity_p": _nan_to_none(cont.p_value) if cont is not None else None,
         "gamma": float(fit.search.fit.gamma),
         "gamma_ci": interval,
+        "gamma_level": float(options.level),
         "method": options.method.upper(),
         "shape": "kink" if fit.stack.kink else "jump",
         "estimator": "two_step" if fit.search.fit.twostep else "one_step",
+        "static": options.static,
+        "collapse": options.collapse,
+        "time_effects": options.time_effects,
+        "maxlag": f"({low}, {'.' if math.isinf(high) else int(high)})",
+        "grid": float(options.grid),
+        "n_boot": float(options.n_boot) if boot is not None else None,
+        "seed": float(boot.seed) if boot is not None and boot.seed is not None else None,
+        "joint": bool(fit.variance.joint),
+        "id": fit.id or "(index)",
+        "time": fit.time or "(index)",
     }
+    if test is not None:
+        stats.update(_critical_values(test.draws, "linearity"))
     return ModelColumn("xtdpthresh", fit.spec.y, coefs, stats, "bootstrap", fit.spec.q)
+
+
+#: Levels of the critical values of the bootstrap tests, as ``(key suffix, size)``.
+_CRITICAL = (("10", 0.10), ("5", 0.05), ("1", 0.01))
+
+
+def _critical_values(draws: np.ndarray, test: str) -> dict[str, Statistic]:
+    """Bootstrap critical values at 10, 5 and 1 percent of a test, keyed ``<test>_crit<size>``.
+
+    The p-value of the tests counts ``1 + #{D* >= D}`` over ``1 + B``, so the test rejects at
+    size ``a`` when it is at most ``a``: the critical value is the ``k``-th largest draw with
+    ``k = floor(a (B + 1))`` (the statistic must exceed it).  ``None`` when ``k`` is zero, which
+    is the case of too few draws for that size.
+    """
+    values = np.sort(np.asarray(draws, dtype=float)[np.isfinite(draws)])[::-1]
+    out: dict[str, Statistic] = {}
+    for suffix, size in _CRITICAL:
+        k = int(math.floor(size * (values.size + 1) + 1e-9))
+        out[f"{test}_crit{suffix}"] = float(values[k - 1]) if 1 <= k <= values.size else None
+    return out
 
 
 # ------------------------------------------------------------------------------------ xthenreg
@@ -181,9 +223,18 @@ def _from_xthenreg(fit: XthenregFit) -> ModelColumn:
         "linearity_p": fit.boots_p if fit.boots_p >= 0 else None,
         "gamma": float(fit.gamma),
         "gamma_ci": (float(low), float(high)),
+        "gamma_level": 95.0,
         "method": "FD",
         "shape": "kink" if fit.kink else "jump",
+        "static": fit.static,
+        "grid": float(fit.grid_num),
+        "n_boot": float(fit.boot_reps) if fit.boot_reps > 0 else None,
+        "seed": float(fit.seed) if fit.seed is not None else None,
+        "n_periods": float(fit.n_periods),
     }
+    if math.isfinite(fit.sup_wald):
+        stats["linearity"] = float(fit.sup_wald)
+        stats.update(_critical_values(fit.boot_sup, "linearity"))
     return ModelColumn("xthenreg", fit.y_name, coefs, stats, "asymptotic", fit.q_name)
 
 

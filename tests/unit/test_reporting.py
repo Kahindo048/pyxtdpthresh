@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import warnings
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -486,19 +487,97 @@ def test_the_json_record_of_an_xthenreg_fit(henreg):
 
 
 # ------------------------------------------------------------------------------ summary
-def test_the_summary_lists_the_three_blocks_the_threshold_and_the_diagnostics(fd, henreg):
+def _section(out, title):
+    """Lines of the table that starts with ``title`` (up to the closing double rule)."""
+    lines = out.splitlines()
+    start = next(i for i, line in enumerate(lines) if line.strip().startswith(title))
+    end = next(i for i in range(start + 2, len(lines)) if lines[i] == "=" * len(lines[start + 1]))
+    return lines[start : end + 1]
+
+
+def test_the_summary_has_the_six_blocks_of_pyxtabond2_and_pyxthreg(fd):
+    out = summary(fd, when=datetime(2026, 11, 4, 10, 12, 31))
+    lines = out.splitlines()
+    assert lines[0].strip() == "PyXtdpthresh Estimation Results"
+    assert "Date:" in out and "Wed, 04 Nov 2026" in out and "10:12:31" in out
+    for title in (
+        "Threshold Estimates (Level = 95%)",
+        "Threshold Effect Test (Bootstrap, B = 49)",
+        "Dynamic Panel Threshold Coefficients",
+        "Diagnostic Tests",
+    ):
+        assert any(line.strip() == title for line in lines)
+    assert max(len(line) for line in lines) <= 80
+    assert out.endswith("=" * 80 + "\n")
+
+
+def test_the_summary_numbers_are_the_ones_of_the_fit(fd):
     out = summary(fd)
-    for block in ("Lower regime", "Change at the threshold", "Upper regime"):
-        assert block in out
-    assert f"{fd.search.fit.gamma:.3f}" in out
+    boot = fd.bootstrap
+    th = _section(out, "Threshold Estimates")[-2].split()
+    assert th[1] == f"{fd.search.fit.gamma:.4f}"
+    assert (th[2], th[3]) == (f"{boot.ci.lo:.4f}", f"{boot.ci.hi:.4f}")
+    test = _section(out, "Threshold Effect Test")[-2].split()
+    assert test[1] == f"{boot.linearity.statistic:.4f}"
+    assert test[2] == f"{boot.linearity.p_value:.4f}"
+    diag = "\n".join(_section(out, "Diagnostic Tests"))
+    assert f"z = {fd.serial.ar1.statistic:.2f}" in diag
+    assert f"Pr > z = {fd.serial.ar2.p_value:.3f}" in diag
+    assert f"chi2({fd.hansen.df:.0f}) = {fd.hansen.statistic:.2f}" in diag
+    assert f"Pr > chi2 = {fd.hansen.p_value:.3f}" in diag
     est = extract(fd).coefs[("upper", "x")]
     assert f"{est.b:.4f}" in out and f"{est.se:.4f}" in out
-    assert f"Hansen J (p-value): {fd.hansen.p_value:.3f}" in out
-    assert "Units: 300" in out and "Threshold variable: q" in out
-    french = summary(fd, lang="fr")
-    assert "Régime haut" in french and "Variable de seuil : q".replace(" :", ":") in french
-    other = summary(henreg)
-    assert "Hansen J (p-value): -" in other
+    for block in ("Lower regime  (q <= ", "Change at the threshold", "Upper regime  (q > "):
+        assert block in out
+
+
+def test_the_critical_values_are_the_order_statistics_the_p_value_counts(fd):
+    draws = np.sort(fd.bootstrap.linearity.draws)[::-1]
+    b = draws.size
+    col = extract(fd).stats
+    for suffix, size in (("10", 0.10), ("5", 0.05), ("1", 0.01)):
+        k = int(size * (b + 1) + 1e-9)
+        want = float(draws[k - 1]) if k >= 1 else None
+        assert col[f"linearity_crit{suffix}"] == want
+    # a statistic above the critical value of size a has a bootstrap p-value of at most a
+    if fd.bootstrap.linearity.statistic > col["linearity_crit5"]:
+        assert fd.bootstrap.linearity.p_value <= 0.05
+
+
+def test_a_size_with_too_few_draws_has_no_critical_value(fd):
+    from pyxtdpthresh.extras.reporting.extract import _critical_values
+
+    out = _critical_values(np.arange(20.0), "linearity")
+    assert out["linearity_crit1"] is None and out["linearity_crit10"] == 18.0
+
+
+def test_the_summary_in_french_and_at_another_level(fd):
+    out = summary(fd, lang="fr", level=90)
+    assert "Résultats d'estimation PyXtdpthresh" in out and "Régime haut" in out
+    assert "[0.050" in out and "0.950]" in out and "Tests de diagnostic" in out
+    assert max(len(line) for line in out.splitlines()) <= 80
+
+
+def test_the_summary_of_xthenreg_has_dashes_where_the_model_has_nothing(henreg):
+    out = summary(henreg)
+    assert out.splitlines()[0].strip() == "PyXthenreg Estimation Results"
+    assert "Linearity (sup-Wald)" in out and f"{henreg.sup_wald:.4f}" in out
+    assert all(row.split()[-1] == "-" for row in _section(out, "Diagnostic Tests")[4:7])
+    assert max(len(line) for line in out.splitlines()) <= 80
+
+
+def test_the_summary_without_bootstrap_has_no_threshold_effect_table(point_only):
+    out = summary(point_only)
+    assert "Threshold Effect Test" not in out
+    th = _section(out, "Threshold Estimates")[-2].split()
+    assert th[2:] == ["-", "-"]
+
+
+def test_long_variable_names_widen_every_rule(frame):
+    long = frame.rename(columns={"x": "a_very_long_regressor_name_for_the_table"})
+    out = summary(fit(long, ("a_very_long_regressor_name_for_the_table",)))
+    widths = {len(line) for line in out.splitlines() if line and set(line) == {"="}}
+    assert len(widths) == 1 and widths.pop() > 80
 
 
 def test_compare_is_the_stargazer_shortcut(fd, fod):

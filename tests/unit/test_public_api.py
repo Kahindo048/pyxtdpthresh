@@ -142,9 +142,10 @@ def test_the_journal_reports_the_drawn_seed(frame):
 
 # ----------------------------------------------------------------------------- the text
 def test_print_and_repr_give_the_summary(result):
-    assert str(result) == repr(result) == result.summary() == summary(result.fit)
-    assert "Lower regime" in str(result)
-    assert "Seuil" in result.summary(lang="fr") or "Régime" in result.summary(lang="fr")
+    assert str(result) == repr(result) == result.summary()
+    assert result.summary() == summary(result.fit, when=result._when)
+    assert "Lower regime" in str(result) and "Diagnostic Tests" in str(result)
+    assert "Régime haut" in result.summary(lang="fr")
 
 
 def test_the_notebook_displays_are_the_table(result):

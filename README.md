@@ -29,26 +29,66 @@ the main example of the help file of `xtdpthresh`.
 ```python
 import pyxtdpthresh as pyx
 
-df = pyx.load_dataset("invest")                       # Hansen (1999): 565 firms, 1973-1987
+df = pyx.load_dataset("invest")  # Hansen (1999): 565 firms, 1973-1987
 df = df[~df["firm"].isin([137, 391, 407, 488, 538])]  # the five extreme firms of Seo and Shin
 
 res = pyx.xtdpthresh(
-    df, "invest", q="debt", endogenous=["cashflow", "tobin_q", "debt"],
-    maxlag=(3, 8), collapse=True, id="firm", time="year", seed=12345,
+    df,
+    "invest",
+    q="debt",
+    endogenous=["cashflow", "tobin_q", "debt"],
+    maxlag=(3, 8),
+    collapse=True,
+    id="firm",
+    time="year",
+    seed=12345,
 )
-print(res)                       # estimates by regime, threshold and its interval, tests
-res.to_latex("table.tex")        # also to_html, to_markdown, to_word, to_excel, to_csv
+print(res)  # estimates by regime, threshold and its interval, tests
+res.to_latex("table.tex")  # also to_html, to_markdown, to_word, to_excel, to_csv
 res.plot("regimes", path="regimes.png")
-print(res.diagnose())            # what deserves attention, in plain language
+print(res.diagnose())  # what deserves attention, in plain language
 ```
 
-On this panel the call takes about two seconds and prints
+On this panel the call takes about two seconds and prints a report like those of `pyxtabond2` and
+`pyxthreg` (abridged here):
 
 ```
-Threshold γ̂ = 0.4194   Threshold 95 % interval: [0.0122, 0.5227]
+                        PyXtdpthresh Estimation Results
+================================================================================
+Dep. Variable:                  invest    Threshold var.:                   debt
+Model:            Dyn. panel threshold    Threshold effect:                 jump
+Method:                       Two-Step    Transformation:                     FD
+Date:                 Wed, 04 Nov 2026    Group Variable:                   firm
+Time:                         10:12:31    Time variable:                    year
+No. Observations:                 6720    Lag Limits:                     (3, 8)
+No. Groups:                        560    Collapse:                          Yes
+Obs per group:                   12.00    Time effects:                       No
+No. Instruments:                    25    Bootstrap B / seed:        299 / 12345
+Covariance Type: Robust (joint, gamma)    Grid points:                       100
+================================================================================
 ...
-Hansen J (p-value): 0.3818   AR(1) (p-value): 0.0000
-AR(2) (p-value): 0.7382   Linearity test (p-value): 0.0067
+                       Threshold Estimates (Level = 95%)
+================================================================================
+Model                          Threshold            Lower CI            Upper CI
+--------------------------------------------------------------------------------
+Th-1                              0.4194              0.0122              0.5227
+================================================================================
+
+                   Threshold Effect Test (Bootstrap, B = 299)
+================================================================================
+Test                     Statistic     Prob      Crit10       Crit5        Crit1
+--------------------------------------------------------------------------------
+Linearity                   0.0087   0.0067      0.0052      0.0061       0.0085
+...
+
+                                Diagnostic Tests
+================================================================================
+Diagnostic Test                              Statistic                   P-value
+--------------------------------------------------------------------------------
+Arellano-Bond AR(1)                          z = -4.61            Pr > z = 0.000
+Arellano-Bond AR(2)                          z = -0.33            Pr > z = 0.738
+Hansen test of overid.                chi2(15) = 16.00         Pr > chi2 = 0.382
+================================================================================
 ```
 
 The linearity test rejects, while the confidence set of the threshold is wide and made of four
@@ -87,9 +127,9 @@ at most 5e-5, or relative difference at most 1e-6). The check is automated and r
 * the eight examples of the help file of `xtdpthresh` are run in both programs with the default
   options, object by object (`docs/help_examples.md`).
 
-`docs/validation_report.pdf` gives the largest deviation from Stata by block, by object and by case
-(built by `python -m validation.report`; `--record` first re-runs the golden tests to record the
-deviations).
+Appendix B of `docs/user_guide.pdf` gives the largest deviation from Stata by block, by object and by
+case (its LaTeX is written by `python -m validation.report`; `--record` first re-runs the golden tests
+to record the deviations).
 
 `pytest` runs about 2100 tests; line and branch coverage is 91.5 %. `docs/ported_functions.md` lists
 the Stata functions that are ported and where; every ported function cites its Stata source
@@ -138,8 +178,9 @@ Without `seed=`, a seed is drawn and recorded: `res.seed` replays the run exactl
   gallery of figures (`docs/galerie/`); `examples/` has runnable scripts.
 * `docs/user_guide.md` is the user guide: every option with its Stata name, and how to read the
   output. `docs/user_guide.pdf` is the same guide in PDF, with the methodological note (the algebra, the
-  algorithms, the conventions of Stata that are reproduced, the validation journal) as Appendix A; it is
-  built from `docs/user_guide.md` and `docs/methodological_note.tex` by `tools/build_guide_pdf.py`.
+  algorithms, the conventions of Stata that are reproduced, the validation journal) as Appendix A and the validation against Stata 17 as Appendix B; it is
+  built from `docs/user_guide.md`, `docs/methodological_note.tex` and `docs/validation_appendix.tex` by
+  `tools/build_guide_pdf.py`.
 * `ARCHITECTURE.md` and `CONTRIBUTING.md` describe the layers, the coding rules and the checks.
 
 ## References

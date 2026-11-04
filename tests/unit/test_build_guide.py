@@ -60,3 +60,12 @@ def test_the_guide_builds_with_the_note_as_appendix(tmp_path):
     assert r"\appendix" in tex and "Methodological note" in tex
     assert r"xdpt2\_grid\_search" in tex  # the generated inventory is in the appendix
     assert tex.count(r"\end{document}") == 1
+    # Appendix B, the validation against Stata 17, follows the note and ends the document
+    assert tex.index("Methodological note") < tex.index("Validation against Stata 17")
+    assert tex.index("Largest deviation by case") < tex.index(r"\end{document}")
+
+
+def test_the_guide_needs_the_validation_appendix_to_exist(tmp_path, monkeypatch):
+    monkeypatch.setattr(tool, "VALIDATION", tmp_path / "missing.tex")
+    with pytest.raises(SystemExit, match="validation.report"):
+        tool.insert_note("\\end{document}", tmp_path)

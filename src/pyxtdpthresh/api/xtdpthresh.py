@@ -62,6 +62,18 @@ def xtdpthresh(
         ``stata_code`` is its return code).
     DataError
         If the data cannot be used (repeated pairs, missing keys, no usable observation).
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> df = pyx.load_dataset("invest")
+    >>> df = df[~df["firm"].isin([137, 391, 407, 488, 538])]
+    >>> res = pyx.xtdpthresh(df, "invest", q="debt", endogenous=["cashflow", "tobin_q", "debt"],
+    ...                      maxlag=(3, 8), collapse=True, id="firm", time="year", seed=12345)
+    >>> round(res.gamma, 4)
+    0.4194
+    >>> [round(v, 4) for v in res.gamma_ci]
+    [0.0122, 0.5227]
     """
     if options.get("bootstrap", True) and options.get("seed") is None:
         options["seed"] = int(np.random.default_rng().integers(1, _MAX_SEED))

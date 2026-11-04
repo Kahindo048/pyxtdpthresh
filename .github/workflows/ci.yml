@@ -1,0 +1,63 @@
+# Continuous integration: lint and type checks, the tests without Stata (the golden masters are
+# frozen in tests/golden), and the build of the distribution.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MPLBACKEND: Agg
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  checks:
+    name: Lint, types, layers, provenance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests tools validation examples
+      - run: ruff format --check src tests tools validation examples
+      - run: mypy
+      - run: lint-imports
+      - run: python tools/ported_functions.py check
+      - run: python tools/check_docstrings.py
+
+  tests:
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: python -m pytest -q
+
+  package:
+    name: Wheel and sdist, clean install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install build twine
+      - run: python tools/check_install.py

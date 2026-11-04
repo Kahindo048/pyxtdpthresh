@@ -25,7 +25,8 @@ def test_the_quick_start_of_the_readme_runs_as_written(tmp_path):
     code = re.search(r"```python\n(.*?)```", readme, re.S).group(1)
     done = run(["-c", code], tmp_path)
     assert done.returncode == 0, done.stderr[-1500:]
-    assert "Threshold" in done.stdout and "Linearity test" in done.stdout
+    assert "Threshold Estimates" in done.stdout and "Threshold Effect Test" in done.stdout
+    assert "Diagnostic Tests" in done.stdout and "Crit5" in done.stdout
     assert (tmp_path / "table.tex").exists() and (tmp_path / "regimes.png").exists()
     assert "0.4194" in done.stdout  # the threshold quoted in the README
 

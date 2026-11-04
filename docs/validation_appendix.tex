@@ -1,32 +1,12 @@
-\documentclass[10.5pt,a4paper]{article}
-\usepackage[margin=2.3cm]{geometry}
-\usepackage{fontspec}
-\setmainfont{Latin Modern Roman}
-\setmonofont{Latin Modern Mono}[Scale=0.92]
-\usepackage{amsmath}
-\usepackage{booktabs,longtable,array}
-\usepackage{etoolbox}
-\AtBeginEnvironment{longtable}{\footnotesize}
-\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue]{hyperref}
-\usepackage{fancyhdr}
-\pagestyle{fancy}\fancyhf{}
-\fancyhead[L]{\small pyxtdpthresh validation report}
-\fancyfoot[C]{\small\thepage}
-\setlength{\emergencystretch}{3em}
-\renewcommand{\arraystretch}{1.12}
-\setlength{\tabcolsep}{4pt}
-\newcommand{\code}[1]{\texttt{#1}}
+\clearpage
+\providecommand{\vcode}[1]{\texttt{#1}}
 
+\section{Validation against Stata 17}\label{app:validation}
+This appendix gives the largest deviation of the package (version 0.0.1) from Stata 17 by
+block, by case and by object, over every comparison of the golden tests and of the stress test.
+It was built on 04 November 2026 by \vcode{python -m validation.report}.
 
-\title{\textbf{pyxtdpthresh 0.0.1: validation against Stata 17}\\[2pt]\large Largest deviation by block, by case and by object}
-
-\author{}
-
-\date{03 November 2026}
-
-\begin{document}\maketitle
-
-\section{Rule and method}
+\subsection{Rule and method}
 
 Every number the package reports must equal the one computed by Stata 17 to four
 decimals: the absolute difference is at most $5e-05$ \emph{or} the relative difference is at
@@ -36,14 +16,14 @@ objective function). The \emph{margin} of a value is $\min(|\Delta|/5e-05,\;
 largest margin of each block.
 
 The references are produced by the real commands (xthenreg (Seo, Kim and Kim 2019) and xtdpthresh 0.9.38) run in batch with Stata 17.0 MP;
-each object is exported at 15 significant digits and frozen in \code{tests/golden/}. The test
+each object is exported at 15 significant digits and frozen in \vcode{tests/golden/}. The test
 suite compares the package with the frozen values, and the deviations in this report are recorded
 by those very comparisons (4\textbackslash{},764 comparisons of matrices or numbers in the golden tests, plus the
 objects of the help-file examples). The random numbers of Stata are reproduced exactly, so the
 seeded bootstraps draw the weights of the command and their $p$-values and confidence sets are
 compared directly.
 
-\section{Summary by block}
+\subsection{Summary by block}
 
 \begin{longtable}{@{}p{7.4cm}rrrrr@{}}
 \toprule
@@ -71,24 +51,25 @@ xtdpthresh: unbalanced panel of the help file (no bootstrap) & 2 & 4 & 184 & $6.
 xtdpthresh: hostile inputs & 4 & 1 & 24 & $5.9\times10^{-8}$ & 0.0012 \\
 Simulated panels of the Seo-Shin design & 4 & 1 & 20 & $4.5\times10^{-9}$ & 8.9e-05 \\
 xtdpthresh: the examples of the help file (default options) & 8 & 72 & 503 & $2.1\times10^{-7}$ & 0.0014 \\
+xtdpthresh: 120 random scenarios (stress test) & 97 & 76 & 5\,286 & $2.9\times10^{-5}$ & 8.5e-05 \\
 \midrule
-\textbf{All blocks} & \textbf{377} & & \textbf{2\,747\,682} & \textbf{$4.6\times10^{5}$} & \textbf{0.097} \\
+\textbf{All blocks} & \textbf{474} & & \textbf{2\,752\,968} & \textbf{$4.6\times10^{5}$} & \textbf{0.097} \\
 \bottomrule
 \end{longtable}
 
 \noindent \emph{Cases} are the distinct designs or samples of a block; \emph{Objects} are the
-distinct names compared (for example \code{e(b)}); \emph{Values} counts every number compared, a
+distinct names compared (for example \vcode{e(b)}); \emph{Values} counts every number compared, a
 matrix counting for all its elements. The absolute deviation is large only where the values
 are (the matrix routines are tested on very large and very small matrices); the margin says
 whether the rule holds. Integer results (counts of equations, instruments, return
 codes of the refusals, sets of rows) are compared for exact equality and are not listed in the
 deviations: the tests fail on the first difference.
 
-\section{The examples of the help file}
+\subsection{The examples of the help file}
 
-The eight commands of the help file of \code{xtdpthresh} were run as printed, with the default options of Stata
-(\code{boot(299)}, \code{gridci(100)}, \code{grid(100)}), on Hansen's investment panel without the five extreme firms.
-The tables of the values, Python against Stata, are in \code{docs/help\_examples.md}; the largest deviation of each
+The eight commands of the help file of \vcode{xtdpthresh} were run as printed, with the default options of Stata
+(\vcode{boot(299)}, \vcode{gridci(100)}, \vcode{grid(100)}), on Hansen's investment panel without the five extreme firms.
+The tables of the values, Python against Stata, are in \vcode{docs/help\_examples.md}; the largest deviation of each
 kind of object is below.
 
 \begin{longtable}{@{}p{7.2cm}p{2.8cm}rr@{}}
@@ -140,11 +121,37 @@ Postestimation: residuals and regime & coefficient & 9 & $1.3\times10^{-14}$ \\
 \bottomrule
 \end{longtable}
 
-\section{Largest deviation by object}
+\subsection{The stress test}
+120 panels and calls were drawn at random (units, periods, share of missing periods and of
+missing values, a normal, rounded, heavy-tailed, outlying or four-valued threshold variable, the
+roles of the regressors, \vcode{method}, \vcode{kink}, \vcode{td}, \vcode{collapse}, \vcode{maxlag}, the grid and the
+bootstrap) and run in Stata and in the package on the same numbers (\vcode{validation/stress.py},
+\vcode{validation/stress\_cases.py}). The panels are read by Stata with \vcode{asdouble}: by default
+\vcode{import delimited} stores 32-bit floats, which moves a weakly identified estimate by $10^{-6}$.
+\begin{itemize}
+\item 97 scenarios are estimated by both and agree on every object of the result
+(the objects are those of the help-file examples; see the summary table).
+\item 21 are refused by both with the same return code (498: no admissible threshold, an
+ill-conditioned instrument matrix\ldots).
+\item 2 are degenerate and decided by rounding noise, and are listed in the test as expected
+to differ: with fewer units than instruments the criterion is exactly zero over part of the grid, so
+the extra candidate of the confidence set is the first of tied minima; with fewer equations than
+instrument columns the dependence rule of the command keeps or drops a column on a pivot of the order
+of $10^{-13}$, its own limit. The command documents this limit in its source.
+\end{itemize}
+Without Stata the same panels also check that the package never crashes (only its own exceptions,
+with a Stata return code), that every output works (summary, tables in five formats, JSON, plot,
+prediction), that a result does not change when the rows are shuffled, the units renamed or the time
+origin shifted, that the threshold follows an affine change of the threshold variable, that one or
+several BLAS threads give the same numbers, and that other containers of the same data (a
+\vcode{MultiIndex}, categorical or string identifiers, nullable or 32-bit numbers, accented names)
+give the same result while damaged inputs are refused with a message.
 
-The objects are named as the tests name them (\code{e(b)}, \code{e(V)}, \code{e(ci\_grid)}\ldots). A block appears here when it compares several named objects over several cases; the other blocks compare one kind of value, or one object per case, and are described by the table of their cases in the next section.
+\subsection{Largest deviation by object}
 
-\subsection*{Matrix routines (invsym, cholinv, syminv)}
+The objects are named as the tests name them (\vcode{e(b)}, \vcode{e(V)}, \vcode{e(ci\_grid)}\ldots). A block appears here when it compares several named objects over several cases; the other blocks compare one kind of value, or one object per case, and are described by the table of their cases in the next section.
+
+\subsubsection*{Matrix routines (invsym, cholinv, syminv)}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -159,7 +166,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Quantiles and threshold grids}
+\subsubsection*{Quantiles and threshold grids}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -178,7 +185,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Data layer: xtset, lags, missing values}
+\subsubsection*{Data layer: xtset, lags, missing values}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -190,7 +197,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xthenreg: data and instruments}
+\subsubsection*{xthenreg: data and instruments}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -214,7 +221,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xthenreg: sup-Wald statistic and linearity test}
+\subsubsection*{xthenreg: sup-Wald statistic and linearity test}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -228,7 +235,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xthenreg: covariance and confidence intervals}
+\subsubsection*{xthenreg: covariance and confidence intervals}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -242,7 +249,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xthenreg: complete result}
+\subsubsection*{xthenreg: complete result}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -258,7 +265,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xthenreg: bandwidth multiplier h\_0() through the public function}
+\subsubsection*{xthenreg: bandwidth multiplier h\_0() through the public function}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -271,7 +278,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: threshold search and final estimate}
+\subsubsection*{xtdpthresh: threshold search and final estimate}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -287,7 +294,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: point estimates on the full panel}
+\subsubsection*{xtdpthresh: point estimates on the full panel}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -301,7 +308,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: deviations, time effects, unbalanced panels, history}
+\subsubsection*{xtdpthresh: deviations, time effects, unbalanced panels, history}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -318,7 +325,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: variances and diagnostics}
+\subsubsection*{xtdpthresh: variances and diagnostics}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -360,7 +367,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: predict}
+\subsubsection*{xtdpthresh: predict}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -376,7 +383,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: bootstraps, confidence set, tests}
+\subsubsection*{xtdpthresh: bootstraps, confidence set, tests}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -415,7 +422,7 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: unbalanced panel of the help file (no bootstrap)}
+\subsubsection*{xtdpthresh: unbalanced panel of the help file (no bootstrap)}
 
 \begin{longtable}{@{}p{8.2cm}rrr@{}}
 \toprule
@@ -429,9 +436,9 @@ Object & Cases & Values & Largest $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\section{Largest deviation by case}
+\subsection{Largest deviation by case}
 
-\subsection*{Random numbers (Stata's Mersenne Twister)}
+\subsubsection*{Random numbers (Stata's Mersenne Twister)}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -446,7 +453,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Matrix routines (invsym, cholinv, syminv)}
+\subsubsection*{Matrix routines (invsym, cholinv, syminv)}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -478,7 +485,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Quantiles and threshold grids}
+\subsubsection*{Quantiles and threshold grids}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -493,7 +500,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Data layer: xtset, lags, missing values}
+\subsubsection*{Data layer: xtset, lags, missing values}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -506,7 +513,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Time-series operators}
+\subsubsection*{Time-series operators}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -535,7 +542,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xthenreg: data and instruments}
+\subsubsection*{xthenreg: data and instruments}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -557,7 +564,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xthenreg: sup-Wald statistic and linearity test}
+\subsubsection*{xthenreg: sup-Wald statistic and linearity test}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -577,7 +584,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xthenreg: covariance and confidence intervals}
+\subsubsection*{xthenreg: covariance and confidence intervals}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -611,7 +618,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xthenreg: complete result}
+\subsubsection*{xthenreg: complete result}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -653,7 +660,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xthenreg: bandwidth multiplier h\_0() through the public function}
+\subsubsection*{xthenreg: bandwidth multiplier h\_0() through the public function}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -665,7 +672,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: instruments and fixed-threshold GMM}
+\subsubsection*{xtdpthresh: instruments and fixed-threshold GMM}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -703,7 +710,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: threshold search and final estimate}
+\subsubsection*{xtdpthresh: threshold search and final estimate}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -742,7 +749,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: point estimates on the full panel}
+\subsubsection*{xtdpthresh: point estimates on the full panel}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -766,7 +773,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: deviations, time effects, unbalanced panels, history}
+\subsubsection*{xtdpthresh: deviations, time effects, unbalanced panels, history}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -817,7 +824,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: variances and diagnostics}
+\subsubsection*{xtdpthresh: variances and diagnostics}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -872,7 +879,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: predict}
+\subsubsection*{xtdpthresh: predict}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -894,7 +901,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: bootstraps, confidence set, tests}
+\subsubsection*{xtdpthresh: bootstraps, confidence set, tests}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -960,7 +967,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: unbalanced panel of the help file (no bootstrap)}
+\subsubsection*{xtdpthresh: unbalanced panel of the help file (no bootstrap)}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -972,7 +979,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{xtdpthresh: hostile inputs}
+\subsubsection*{xtdpthresh: hostile inputs}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -986,7 +993,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\subsection*{Simulated panels of the Seo-Shin design}
+\subsubsection*{Simulated panels of the Seo-Shin design}
 
 \begin{longtable}{@{}p{3.6cm}rrp{4.9cm}r@{}}
 \toprule
@@ -1000,7 +1007,7 @@ Case & Objects & Values & Worst object & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\section{Comparisons under a looser tolerance}
+\subsection{Comparisons under a looser tolerance}
 The rule of Section 1 holds for every other value of this report. 4 comparison(s) are made under a looser relative tolerance, declared in the test and not hidden in the tables above: the input is so ill-conditioned that the error of any implementation is of the order of the condition number times the machine precision (a matrix of condition number $10^{13}$ gives about $10^{-3}$), so two correct inverses legitimately differ in the fourth digit.
 \begin{longtable}{@{}p{3cm}p{3cm}rr@{}}
 \toprule
@@ -1014,7 +1021,7 @@ Case & Object & Relative tolerance & $|\Delta|$ \\
 \bottomrule
 \end{longtable}
 
-\section{What this report does not cover}
+\subsection{What this report does not cover}
 \begin{itemize}
 \item The statistical behaviour of the package's own seeds (size and power of the tests, coverage
 of the confidence set over many panels) is measured by Monte Carlo and compared with the papers,
@@ -1023,15 +1030,14 @@ not with Stata.
 the tests check the printed digits, not the typography. They are not in the deviations above.
 \item Timings are measured on the same machine one run after the other and are not a validation.
 \item The messages that Stata prints and the package does not (the warning of an unbalanced
-\code{boottype(unit)} and the hint on near-common variables in a rank failure) are not compared;
+\vcode{boottype(unit)} and the hint on near-common variables in a rank failure) are not compared;
 they do not change any number.
 \end{itemize}
-\section{Environment}
+\subsection{Environment}
 \begin{tabular}{@{}ll@{}}
 Reference & Stata 17.0 MP; xthenreg (Seo, Kim and Kim 2019) and xtdpthresh 0.9.38 \\
 Package & pyxtdpthresh 0.0.1 \\
 Python & 3.12.10; NumPy 2.5.4; Numba 0.68.1 \\
 Platform & Windows 11 \\
-Report built & 03 November 2026 \\
+Report built & 04 November 2026 \\
 \end{tabular}
-\end{document}

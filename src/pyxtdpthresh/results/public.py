@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -52,6 +53,7 @@ class _Result:
     fit: Any
     _names: tuple[str, ...]
     _theta: FloatArray
+    _when: datetime
 
     # ------------------------------------------------------------------------------ numbers
     @property
@@ -96,10 +98,16 @@ class _Result:
 
     # ---------------------------------------------------------------------------------- text
     def summary(self, *, level: float = 95.0, lang: Lang | None = None, digits: int = 4) -> str:
-        """Readable summary: sample, threshold, the three blocks of slopes and the tests."""
+        """Report in the layout of ``pyxtabond2`` and ``pyxthreg``, 80 columns wide.
+
+        The header (sample, model, options), the threshold with its interval, the threshold-effect
+        test with its bootstrap critical values, the slopes of the three regimes and the
+        diagnostic tests.  The date and time are those of the estimation, so printing the result
+        twice gives the same text.
+        """
         from pyxtdpthresh.extras.reporting import summary
 
-        return summary(self.fit, level=level, lang=lang, digits=digits)
+        return summary(self.fit, level=level, lang=lang, digits=digits, when=self._when)
 
     def __str__(self) -> str:
         return self.summary()
@@ -190,6 +198,7 @@ class XtdpthreshResult(_Result):
 
     def __init__(self, fit: PointFit) -> None:
         self.fit = fit
+        self._when = datetime.now()
         self._names = fit.names
         self._theta = np.asarray(fit.search.fit.theta, dtype=np.float64)
 
@@ -243,25 +252,63 @@ class XtdpthreshResult(_Result):
 
     # ------------------------------------------------------------------------------- reports
     def diagnose(self, lang: Lang | None = None) -> Diagnosis:
-        """Plain-language report of what in the estimation deserves attention."""
+        """Plain-language report of what in the estimation deserves attention.
+
+        Parameters
+        ----------
+        lang : {"en", "fr"}, optional
+            Language of the report (default: the global ``lang`` option).
+
+        Returns
+        -------
+        Diagnosis
+            The alerts, warnings first; ``print(result.diagnose())`` shows the report.
+        """
         from pyxtdpthresh.extras.reporting import diagnose
 
         return diagnose(self.fit, lang)
 
     def settings_log(self, lang: Lang | None = None) -> SettingsLog:
-        """Journal of the settings the estimation really used (sample, instruments, seed)."""
+        """Journal of the settings the estimation really used (sample, instruments, seed).
+
+        Parameters
+        ----------
+        lang : {"en", "fr"}, optional
+            Language of the journal (default: the global ``lang`` option).
+
+        Returns
+        -------
+        SettingsLog
+            The settings that were applied, which can differ from those requested.
+        """
         from pyxtdpthresh.extras.reporting import settings_log
 
         return settings_log(self.fit, lang)
 
     def ci_table(self) -> pd.DataFrame:
-        """Inversion of the grid bootstrap: one row per candidate threshold."""
+        """Inversion of the grid bootstrap: one row per candidate threshold.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Columns ``gamma``, ``statistic``, ``critical``, ``accepted`` (1 when the candidate is
+            in the confidence set), ``n_valid`` and ``status``; this is ``e(ci_grid)``.  It needs
+            the bootstrap (a ``DataError`` otherwise).
+        """
         from pyxtdpthresh.extras.reporting import ci_table
 
         return ci_table(self.fit)
 
     def regime_table(self) -> pd.DataFrame:
-        """Size of each regime and the mean of the variables in it."""
+        """Size of each regime and the mean of the variables in it.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Rows ``lower`` and ``upper``; columns ``observations``, ``units``, ``share`` (percent
+            of the equations) and the mean of the dependent variable, of the regressors and of the
+            threshold variable in the regime.
+        """
         from pyxtdpthresh.extras.reporting import regime_table
 
         return regime_table(self.fit)
@@ -269,7 +316,26 @@ class XtdpthreshResult(_Result):
     def plot(
         self, kind: str, *, lang: Lang | None = None, path: str | Path | None = None, **options: Any
     ) -> Figure:
-        """Draw the graph ``kind`` (see :data:`pyxtdpthresh.extras.plotting.PLOT_KINDS`)."""
+        """Draw the graph ``kind`` (see :data:`pyxtdpthresh.extras.plotting.PLOT_KINDS`).
+
+        Parameters
+        ----------
+        kind
+            One of ``"profile"``, ``"ci"``, ``"linearity"``, ``"coef"``, ``"regimes"``,
+            ``"effect"``, ``"switch"``, ``"instruments"`` and ``"residuals"``.
+        lang : {"en", "fr"}, optional
+            Language of the texts of the figure (default: the global ``lang`` option).
+        path
+            File to write (``.png``, ``.pdf`` or ``.svg``) in addition to returning the figure.
+        **options
+            Options of the graph: ``var`` for ``"effect"``, ``variables`` for ``"coef"``, ``bins``
+            for ``"regimes"``.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The figure, in the common style of the package.
+        """
         from pyxtdpthresh.extras.plotting import plot
 
         return plot(self.fit, kind, lang=lang, path=path, **options)
@@ -282,7 +348,25 @@ class XtdpthreshResult(_Result):
         *,
         where: str | Sequence[bool] | BoolArray | None = None,
     ) -> pd.Series:
-        """``"residuals"``, ``"xb"``, ``"ar_residuals"`` or ``"regime"`` for the estimation data."""
+        """``"residuals"``, ``"xb"``, ``"ar_residuals"`` or ``"regime"`` for the estimation data.
+
+        Parameters
+        ----------
+        kind
+            ``"residuals"`` and ``"xb"`` are those of the estimated (transformed) equation,
+            ``"ar_residuals"`` the first-difference residuals of the AR tests, ``"regime"`` is
+            ``1`` above the threshold and ``0`` below.
+        frame
+            The data the model was estimated on (same keys).
+        where
+            Condition selecting the rows (Stata ``if``): an expression evaluated on the data
+            (``pandas.DataFrame.eval``) or a boolean mask.
+
+        Returns
+        -------
+        pandas.Series
+            Aligned with ``frame``; missing where the series is not defined.
+        """
         return self.fit.predict(kind, frame, where=where)
 
     def augment(
@@ -293,7 +377,24 @@ class XtdpthreshResult(_Result):
         prefix: str = "",
         overwrite: bool = False,
     ) -> pd.DataFrame:
-        """Copy of ``frame`` with the residuals, the fitted values and the regime as columns."""
+        """Copy of ``frame`` with the residuals, the fitted values and the regime as columns.
+
+        Parameters
+        ----------
+        frame
+            The data the model was estimated on (same keys); it is not modified.
+        kinds
+            Series to add among ``"residuals"``, ``"xb"``, ``"ar_residuals"`` and ``"regime"``.
+        prefix
+            Text put before the column names (``prefix="m1_"`` gives ``m1_residuals``).
+        overwrite
+            Replace a column that already has the name of a series; by default that is an error.
+
+        Returns
+        -------
+        pandas.DataFrame
+            ``frame`` and the new columns.
+        """
         from pyxtdpthresh.extras.augment import augment
 
         return augment(self.fit, frame, kinds=kinds, prefix=prefix, overwrite=overwrite)
@@ -311,6 +412,7 @@ class XthenregResult(_Result):
 
     def __init__(self, fit: XthenregFit) -> None:
         self.fit = fit
+        self._when = datetime.now()
         self._names = fit.names or tuple(f"b{i}" for i in range(fit.coef.size))
         self._theta = np.asarray(fit.coef, dtype=np.float64)
 

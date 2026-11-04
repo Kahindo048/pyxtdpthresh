@@ -34,6 +34,13 @@ pytest -m "not stata"
 
 `validation/run_stata.ps1` runs Stata 17 MP in batch **from PowerShell only**. Reference results are frozen in `tests/golden/golden_master.json`, so the test suite runs without Stata (marker `stata` is for local runs).
 
+## Docstrings of the public API
+
+Every name of `pyxtdpthresh.__all__` (and every public method of its classes) has a numpy-style docstring: a summary,
+a `Parameters` entry for each parameter, a `Returns` section, and an `Examples` section for the main functions (the
+examples are run by `tests/unit/test_public_docstrings.py`, so their output must be exact). `python tools/check_docstrings.py`
+lists the gaps.
+
 ## Releasing
 
 `python tools/check_install.py` builds the wheel and the sdist, runs `twine check`, verifies what each holds (the

@@ -173,6 +173,17 @@ def robustness(
         If a setting is not an option of the estimator or has no values.
     PyxdpthreshError
         If the reference estimation itself fails (a failed variation is only recorded).
+
+    Examples
+    --------
+    >>> import pyxtdpthresh as pyx
+    >>> df = pyx.load_dataset("invest")
+    >>> df = df[~df["firm"].isin([137, 391, 407, 488, 538])]
+    >>> rob = pyx.robustness(df, "invest", q="debt", endogenous=["cashflow", "tobin_q", "debt"],
+    ...                      maxlag=(3, 8), collapse=True, id="firm", time="year", n_boot=19,
+    ...                      grid_ci=20, seed=1, settings={"grid": [50]})
+    >>> len(rob.runs)
+    2
     """
     chosen = _validated(DEFAULT_SETTINGS if settings is None else settings)
     seed = options.pop("seed", None)

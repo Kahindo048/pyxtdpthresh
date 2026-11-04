@@ -71,7 +71,7 @@ def check_contents(wheel: Path, sdist: Path) -> None:
     with tarfile.open(sdist) as t:
         members = t.getnames()
     for need in ("LICENSE", "NOTICE.md", "CITATION.cff", "docs/user_guide.pdf",
-                 "docs/validation_report.pdf"):  # fmt: skip
+                 "docs/validation_appendix.tex"):  # fmt: skip
         if not any(n.endswith("/" + need) for n in members):
             raise SystemExit(f"the sdist lacks {need}")
     if any("/validation/out/" in n or n.endswith(".log") for n in members):

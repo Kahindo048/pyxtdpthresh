@@ -16,7 +16,7 @@ import numpy as np
 from pyxtdpthresh._types import FloatArray
 
 #: A name Stata accepts as a (time-series operated) variable.
-_PLAIN = re.compile(r"^([A-Za-z][A-Za-z0-9]*\.)?[A-Za-z_][A-Za-z0-9_]*$")
+_PLAIN = re.compile(r"^([A-Za-z][A-Za-z0-9]*\.)?[^\W\d]\w*$")
 #: Longest name of a coefficient.
 MAX_NAME = 32
 
